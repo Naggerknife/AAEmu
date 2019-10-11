@@ -1,0 +1,1 @@
+﻿namespace AAEmu.Game.Models.Game.Items{    public sealed class ItemGradeBuffs    {		public uint Id { get; set; }		public int ItemId { get; set; }		public int Item_gradeId { get; set; }		public int BuffId { get; set; }	}}

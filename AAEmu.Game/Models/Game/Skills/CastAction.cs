@@ -1,19 +1,10 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 
 namespace AAEmu.Game.Models.Game.Skills
 {
-    public enum CastType : byte
-    {
-        Skill = 0,
-        Plot = 1,
-        Buff = 2,
-        Unk2 = 3,
-        Unk3 = 4
-    }
-
     public abstract class CastAction : PacketMarshaler
     {
-        public CastType Type { get; set; }
+        public CastActionType Type { get; set; }
 
         public override PacketStream Write(PacketStream stream)
         {
@@ -29,7 +20,7 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public CastSkill(uint skillId, ushort tlId)
         {
-            Type = CastType.Skill;
+            Type = CastActionType.Skill;
             _skillId = skillId;
             _tlId = tlId;
         }
@@ -52,7 +43,7 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public CastPlot(uint plotId, ushort tlId, uint eventId, uint skillId)
         {
-            Type = CastType.Plot;
+            Type = CastActionType.Plot;
             _plotId = plotId;
             _tlId = tlId;
             _eventId = eventId;
@@ -76,7 +67,7 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public CastBuff(Effect effect)
         {
-            Type = CastType.Buff;
+            Type = CastActionType.Buff;
             _effect = effect;
         }
 
@@ -96,7 +87,7 @@ namespace AAEmu.Game.Models.Game.Skills
     {
         public CastUnk2()
         {
-            Type = CastType.Unk2;
+            Type = CastActionType.Unk2;
         }
 
         public override PacketStream Write(PacketStream stream)
@@ -113,7 +104,7 @@ namespace AAEmu.Game.Models.Game.Skills
     {
         public CastUnk3()
         {
-            Type = CastType.Unk3;
+            Type = CastActionType.Unk3;
         }
 
         public override PacketStream Write(PacketStream stream)

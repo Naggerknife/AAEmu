@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills.Plots
@@ -8,8 +8,8 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         public uint Id { get; set; }
         public uint PlotId { get; set; }
         public int Position { get; set; }
-        public uint SourceUpdateMethodId { get; set; }
-        public uint TargetUpdateMethodId { get; set; }
+        public PlotUpdateMethodType SourceUpdateMethod { get; set; }
+        public PlotUpdateMethodType TargetUpdateMethod { get; set; }
         public int TargetUpdateMethodParam1 { get; set; }
         public int TargetUpdateMethodParam2 { get; set; }
         public int TargetUpdateMethodParam3 { get; set; }

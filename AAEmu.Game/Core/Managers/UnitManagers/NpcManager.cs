@@ -81,7 +81,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             SetEquipItemTemplate(npc, template.BodyItems[0].ItemId, EquipmentItemSlot.Face, 0, template.BodyItems[0].NpcOnly);
             if (template.ModelParams != null)
             {
-                if(template.HairId == 0)
+                if (template.HairId == 0)
                     SetEquipItemTemplate(npc, template.BodyItems[1].ItemId, EquipmentItemSlot.Hair, 0, template.BodyItems[1].NpcOnly);
                 else
                     SetEquipItemTemplate(npc, template.HairId, EquipmentItemSlot.Hair);
@@ -123,6 +123,85 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             return npc;
         }
 
+        public uint SetFace(byte race, byte gender)
+        {
+            // [COLLAPSED LOCAL DECLARATIONS. PRESS KEYPAD CTRL-"+" TO EXPAND]
+
+            var result = 0u;
+            switch ( race )
+            {
+                case 1:
+                    if ( gender == 1 )
+                    {
+                        result = 19838u;
+                    }
+                    else
+                    {
+                        if ( gender != 2 )
+                            goto LABEL_23;
+                        result = 19839u;
+                    }
+                    break;
+                case 3:
+                    if ( gender == 1 )
+                    {
+                        result = 401u;
+                    }
+                    else
+                    {
+                        if ( gender != 2 )
+                            goto LABEL_23;
+                        result = 403u;
+                    }
+                    break;
+                case 4:
+                    if ( gender == 1 )
+                    {
+                        result = 23713u;
+                    }
+                    else
+                    {
+                        if ( gender != 2 )
+                            goto LABEL_23;
+                        result = 23714u;
+                    }
+                    break;
+                case 5:
+                    if ( gender == 1 )
+                    {
+                        result = 23715u;
+                    }
+                    else
+                    {
+                        if ( gender != 2 )
+                            goto LABEL_23;
+                        result = 23716u;
+                    }
+                    break;
+                case 6:
+                    if ( gender == 1 )
+                    {
+                        result = 20117u;
+                    }
+                    else
+                    {
+                        if ( gender != 2 )
+                            goto LABEL_23;
+                        result = 20118u;
+                    }
+                    break;
+                case 8:
+                    result = 659u;
+                    if ( gender != 1 )
+                        goto LABEL_23;
+                    break;
+                default:
+                    LABEL_23:
+                    result = 0u;
+                    break;
+            }
+            return result;
+        }
         public void Load()
         {
             _templates = new Dictionary<uint, NpcTemplate>();
@@ -357,7 +436,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                             {
                                 using (var command2 = connection.CreateCommand())
                                 {
-                                    command2.CommandText = "SELECT * FROM npc_postures WHERE npc_posture_set_id=@id";
+                                    command2.CommandText = "SELECT anim_action_id FROM npc_postures WHERE npc_posture_set_id=@id";
                                     command2.Prepare();
                                     command2.Parameters.AddWithValue("id", template.NpcPostureSetId);
                                     using (var sqliteReader2 = command2.ExecuteReader())
@@ -369,40 +448,50 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                 }
                             }
 
-                            if (template.ModelId > 0)
+                            using (var command2 = connection.CreateCommand())
                             {
-                                using (var command2 = connection.CreateCommand())
+                                command2.CommandText =
+                                    "SELECT char_race_id, char_gender_id FROM characters WHERE model_id = @model_id";
+                                command2.Prepare();
+                                command2.Parameters.AddWithValue("model_id", template.ModelId);
+                                using (var sqliteReader2 = command2.ExecuteReader())
+                                using (var reader2 = new SQLiteWrapperReader(sqliteReader2))
                                 {
-                                    command2.CommandText =
-                                        "SELECT * FROM item_body_parts WHERE model_id = @model_id"; // TODO and npc_only = 1
-                                    command2.Prepare();
-                                    command2.Parameters.AddWithValue("model_id", template.ModelId);
-                                    using (var sqliteReader2 = command2.ExecuteReader())
-                                    using (var reader2 = new SQLiteWrapperReader(sqliteReader2))
+                                    if (reader2.Read())
                                     {
-                                        while (reader2.Read())
-                                        {
-                                            var itemId = reader2.GetUInt32("item_id", 0);
-                                            var npcOnly = reader2.GetBoolean("npc_only", true);
-                                            var slot = reader2.GetInt32("slot_type_id") - 23;
-                                            template.BodyItems[slot] = (itemId, npcOnly);
-                                        }
+                                        template.Race = reader2.GetByte("char_race_id");
+                                        template.Gender = reader2.GetByte("char_gender_id");
                                     }
                                 }
-
-                                using (var command2 = connection.CreateCommand())
+                            }
+                            
+                            using (var command2 = connection.CreateCommand())
+                            {
+                                command2.CommandText =
+                                    "SELECT slot_type_id, item_id, npc_only  FROM item_body_parts WHERE model_id = @model_id";
+                                command2.Prepare();
+                                command2.Parameters.AddWithValue("model_id", template.ModelId);
+                                using (var sqliteReader2 = command2.ExecuteReader())
+                                using (var reader2 = new SQLiteWrapperReader(sqliteReader2))
                                 {
-                                    command2.CommandText =
-                                        "SELECT char_race_id, char_gender_id FROM characters WHERE model_id = @model_id";
-                                    command2.Prepare();
-                                    command2.Parameters.AddWithValue("model_id", template.ModelId);
-                                    using (var sqliteReader2 = command2.ExecuteReader())
-                                    using (var reader2 = new SQLiteWrapperReader(sqliteReader2))
+                                    while (reader2.Read())
                                     {
-                                        if (reader2.Read())
+                                        var slot = reader2.GetInt32("slot_type_id") - 23;
+                                        var itemId = reader2.GetUInt32("item_id", 0); // тоже самое, что и HairId
+                                        var npcOnly = reader2.GetBoolean("npc_only", true);
+
+                                        switch (slot)
                                         {
-                                            template.Race = reader2.GetByte("char_race_id");
-                                            template.Gender = reader2.GetByte("char_gender_id");
+                                            case 0: // set face
+                                                template.BodyItems[slot] = (SetFace(template.Race, template.Gender), npcOnly);
+                                                break;
+                                            case 1 when itemId == template.HairId:  // set hair
+                                                npcOnly = reader2.GetBoolean("npc_only", true);
+                                                template.BodyItems[slot] = (template.HairId, npcOnly);
+                                                break;
+                                            default:
+                                                template.BodyItems[slot] = (itemId, npcOnly);
+                                                break;
                                         }
                                     }
                                 }

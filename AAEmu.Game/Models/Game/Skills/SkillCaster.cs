@@ -3,15 +3,6 @@ using AAEmu.Commons.Network;
 
 namespace AAEmu.Game.Models.Game.Skills
 {
-    public enum SkillCasterType : byte
-    {
-        Unit = 0,
-        Unk1 = 1,
-        Item = 2,
-        Unk3 = 3, // TODO mountSkillType
-        Doodad = 4
-    }
-
     public abstract class SkillCaster : PacketMarshaler
     {
         public SkillCasterType Type { get; set; }

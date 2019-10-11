@@ -1,9 +1,5 @@
 ﻿using AAEmu.Commons.Network;
-using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Char.Templates;
-using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Core.Packets.G2C
 {
@@ -11,7 +7,7 @@ namespace AAEmu.Game.Core.Packets.G2C
     {
         private readonly ushort _tl;
 
-        public SCPlotEndedPacket(ushort tl) : base(SCOffsets.SCPlotEventPacket, 1)
+        public SCPlotEndedPacket(ushort tl) : base(SCOffsets.SCPlotEndedPacket, 1)
         {
             _tl = tl;
         }

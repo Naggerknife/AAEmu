@@ -15,7 +15,7 @@ namespace AAEmu.Game.Core.Packets.C2G
         public override void Read(PacketStream stream)
         {
             var teamId = stream.ReadUInt32();
-            var index = (OverHeadMark)stream.ReadInt32();
+            var index = (OverHeadMarkType)stream.ReadInt32();
 
             uint id = 0;
 

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Utils.DB;
@@ -67,8 +67,8 @@ namespace AAEmu.Game.Core.Managers
                             template.Id = reader.GetUInt32("id");
                             template.PlotId = reader.GetUInt32("plot_id");
                             template.Position = reader.GetInt32("position");
-                            template.SourceUpdateMethodId = reader.GetUInt32("source_update_method_id");
-                            template.TargetUpdateMethodId = reader.GetUInt32("target_update_method_id");
+                            template.SourceUpdateMethod = (PlotUpdateMethodType)reader.GetUInt32("source_update_method_id");
+                            template.TargetUpdateMethod = (PlotUpdateMethodType)reader.GetUInt32("target_update_method_id");
                             template.TargetUpdateMethodParam1 = reader.GetInt32("target_update_method_param1");
                             template.TargetUpdateMethodParam2 = reader.GetInt32("target_update_method_param2");
                             template.TargetUpdateMethodParam3 = reader.GetInt32("target_update_method_param3");
@@ -99,7 +99,7 @@ namespace AAEmu.Game.Core.Managers
                             var template = new PlotCondition();
                             template.Id = reader.GetUInt32("id");
                             template.NotCondition = reader.GetBoolean("not_condition", true);
-                            template.Kind = (PlotConditionType) reader.GetInt32("kind_id");
+                            template.Kind = (PlotConditionType)reader.GetInt32("kind_id");
                             template.Param1 = reader.GetInt32("param1");
                             template.Param2 = reader.GetInt32("param2");
                             template.Param3 = reader.GetInt32("param3");
@@ -157,7 +157,7 @@ namespace AAEmu.Game.Core.Managers
                             template.Position = reader.GetInt32("position");
                             template.SourceId = reader.GetInt32("source_id");
                             template.TargetId = reader.GetInt32("target_id");
-                            // TODO 1.2 // template.NotifyFailure = reader.GetBoolean("notify_failure", true);
+                            template.NotifyFailure = reader.GetBoolean("notify_failure", true);
                             var plotEvent = _eventTemplates[id];
                             if (plotEvent.Conditions.Count > 0)
                             {

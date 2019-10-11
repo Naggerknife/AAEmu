@@ -1,0 +1,1 @@
+﻿namespace AAEmu.Game.Models.Game.Slaves{    public class SlaveInitialItems    {        public uint Id { get; set; }		public int SlaveSnitialItemPackId { get; set; }		public int EquipSlotId { get; set; }		public int ItemId { get; set; }	}}

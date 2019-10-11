@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
@@ -18,13 +19,13 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
         public override void Use(Unit caster, Doodad owner, uint skillId)
         {
-            _log.Debug("DoodadFuncFinal");
-            if (After > 0)
-            {
-                owner.GrowthTime = DateTime.Now.AddMilliseconds(After); // TODO ... need here?
-                owner.FuncTask = new DoodadFuncFinalTask(caster, owner, skillId, Respawn);
-                TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(After));
-            }
+            _log.Debug("DoodadFuncFinal: After {0}, MinTime {1}, MaxTime {2}, Tip {3}, Respawn {4}", After, MinTime, MaxTime, Tip, Respawn);
+
+            var delay = Rand.Next(MinTime, MaxTime);
+
+            owner.GrowthTime = DateTime.Now.AddMilliseconds(After); // TODO ... need here?
+            owner.FuncTask = new DoodadFuncFinalTask(caster, owner, skillId, Respawn);
+            TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(After)); // After ms remove the object from visibility
         }
     }
 }

@@ -18,24 +18,19 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
         public override void Use(Unit caster, Doodad owner, uint skillId)
         {
-            _log.Debug("DoodadFuncTimer : NextPhase {0}, SkillId {1}", NextPhase, skillId);
+            _log.Debug("DoodadFuncTimer : NextPhase {0}, SkillId {1}, Delay {2}, Tip {3}", NextPhase, skillId, Delay, Tip);
 
             //This is a temporary fix. We need to find how to properly call the next function.
-            // var nextFunc = DoodadManager.Instance.GetFunc(owner.FuncGroupId, skillId);
-            // if (nextFunc != null) nextFunc.Use(caster, owner, skillId);
-            if (NextPhase > 0)
-            {
-                if (Delay > 0)
-                {
-                    owner.GrowthTime = DateTime.Now.AddMilliseconds(Delay); // TODO ... need here?
-                    // выполняем действие
-                    owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(owner), true); // TODO door, windows with delay of this timer...
+            //var nextFunc = DoodadManager.Instance.GetFunc(owner.FuncGroupId, skillId);
+            //nextFunc?.Use(caster, owner, skillId);
 
-                    // планируем выполнение действия NextPhase
-                    owner.FuncTask = new DoodadFuncTimerTask(caster, owner, skillId, NextPhase);
-                    TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(Delay));
-                }
-            }
+            // perform action
+            owner.GrowthTime = DateTime.Now.AddMilliseconds(Delay + 1); // TODO ... need here?
+            owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(owner), true); // TODO door, windows with delay of this timer...
+
+            // plan the execution of NextPhase
+            owner.FuncTask = new DoodadFuncTimerTask(caster, owner, skillId, NextPhase);
+            TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(Delay + 1));
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Skills.Templates;
@@ -6,14 +6,6 @@ using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills
 {
-    public enum EffectState
-    {
-        Created,
-        Acting,
-        Finishing,
-        Finished
-    }
-
     public class Effect
     {
         private object _lock = new object();
@@ -25,7 +17,7 @@ namespace AAEmu.Game.Models.Game.Skills
         public Unit Caster { get; set; }
         public SkillCaster SkillCaster { get; set; }
         public BaseUnit Owner { get; set; }
-        public EffectState State { get; set; }
+        public EffectStateType State { get; set; }
         public bool InUse { get; set; }
         public int Duration { get; set; }
         public double Tick { get; set; }
@@ -73,9 +65,9 @@ namespace AAEmu.Game.Models.Game.Skills
         {
             switch (State)
             {
-                case EffectState.Created:
+                case EffectStateType.Created:
                 {
-                    State = EffectState.Acting;
+                    State = EffectStateType.Acting;
 
                     Template.Start(Caster, Owner, this);
 
@@ -103,7 +95,7 @@ namespace AAEmu.Game.Models.Game.Skills
 
                     return;
                 }
-                case EffectState.Acting:
+                case EffectStateType.Acting:
                 {
                     if (_count == -1)
                     {
@@ -123,14 +115,14 @@ namespace AAEmu.Game.Models.Game.Skills
                         }
                     }
 
-                    State = EffectState.Finishing;
+                    State = EffectStateType.Finishing;
                     break;
                 }
             }
 
-            if (State == EffectState.Finishing)
+            if (State == EffectStateType.Finishing)
             {
-                State = EffectState.Finished;
+                State = EffectStateType.Finished;
                 InUse = false;
                 StopEffectTask();
             }
@@ -138,15 +130,15 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public void Exit()
         {
-            if (State == EffectState.Finished)
+            if (State == EffectStateType.Finished)
                 return;
-            if (State != EffectState.Created)
+            if (State != EffectStateType.Created)
             {
-                State = EffectState.Finishing;
+                State = EffectStateType.Finishing;
                 ScheduleEffect();
             }
             else
-                State = EffectState.Finishing;
+                State = EffectStateType.Finishing;
         }
 
         private void StopEffectTask()
@@ -165,13 +157,13 @@ namespace AAEmu.Game.Models.Game.Skills
                 UpdateEffect();
             else if (inUse)
                 ScheduleEffect();
-            else if (State != EffectState.Finished)
-                State = EffectState.Finishing;
+            else if (State != EffectStateType.Finished)
+                State = EffectStateType.Finishing;
         }
 
         public bool IsEnded()
         {
-            return State == EffectState.Finished || State == EffectState.Finishing;
+            return State == EffectStateType.Finished || State == EffectStateType.Finishing;
         }
 
         public double GetTimeLeft()

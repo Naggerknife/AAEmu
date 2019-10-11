@@ -1,0 +1,1 @@
+﻿namespace AAEmu.Game.Models.Game.Skills{    public class SkillReqSkillTags    {		public uint Id { get; set; }		public uint SkillReqId { get; set; }		public uint SkillTagId { get; set; }	}}

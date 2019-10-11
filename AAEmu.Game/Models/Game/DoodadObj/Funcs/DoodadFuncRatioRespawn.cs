@@ -1,14 +1,10 @@
 ﻿using System;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
-using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.NPChar;
-using AAEmu.Game.Models.Game.Skills;
-using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Models.Game.Units.Route;
 using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
@@ -41,7 +37,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                 var npcSpawner = new NpcSpawner();
                 npcSpawner.Id = 0;
 
-                npcSpawner.RespawnTime = 0; // не появляться после смерти
+                npcSpawner.RespawnTime = 0; // not appear after death
                 //npcSpawner.UnitId = 1087; // mouse Id = 1087 FactionId = 1
                 //npcSpawner.UnitId = 7027; // Rat Id = 7027, FactionId = 3
                 npcSpawner.UnitId = 7503; // Rat Id = 7503, FactionId = 3
@@ -60,8 +56,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                 npcSpawner.Position.RotationZ = rotZ;
                 var npc = npcSpawner.Spawn(0);
 
-                npc.Respawn = DateTime.MinValue; // не появляться после смерти
-                
+                npc.Respawn = DateTime.MinValue; // not appear after death
+
                 npc.IsAutoAttack = true;
 
                 var target = (BaseUnit)character;

@@ -205,6 +205,84 @@ namespace AAEmu.Game.Models.Game.Char
             SendFragmentedInventory(SlotType.Bank, (byte)Owner.NumBankSlots, Bank);
         }
 
+        public bool AddExistingItem(Item item, bool dontAddPartialCount, SlotType slotType, ItemTaskType reason)
+        {
+            var tasks = TryAddItem(item, slotType, dontAddPartialCount);
+            if (tasks == null)
+            {
+                if (!dontAddPartialCount)
+                    ItemIdManager.Instance.ReleaseId((uint)item.Id);
+                return false;
+            }
+
+            Owner.SendPacket(new SCItemTaskSuccessPacket(reason, tasks, new List<ulong>()));
+            return true;
+        }
+
+        public List<ItemTask> TryAddItem(Item item, SlotType type, bool dontAddPartialCount)
+        {
+            if (item == null)
+                return null;
+
+            int count = item.Count;
+            var tasks = new List<ItemTask>();
+
+            Item[] checkStackable = Items; //Buffer to make sure all items fit before moving if required
+            if (type == SlotType.Bank)
+                checkStackable = Bank;
+            else if (type == SlotType.Mail)
+                return null; //TODO
+            else if (type == SlotType.Trade)
+                return null; //TODO
+
+            if (item.Template.MaxCount > 1)
+            {
+                for (int i = 0; i < checkStackable.Length && count > 0; i++)
+                {
+                    var invItem = checkStackable[i];
+                    if (item.CanStackInto(invItem))
+                    {
+                        var maxChange = Math.Min(invItem.Template.MaxCount - invItem.Count, count);
+                        tasks.Add(new ItemCountUpdate(invItem, maxChange));
+                        invItem.Count += maxChange;
+                        count -= maxChange;
+                    }
+                }
+            }
+
+            if (count > 0)
+            {
+                var firstFreeSlot = GetFirstFreeSlot(type);
+                if (firstFreeSlot != -1)
+                {
+                    item.Slot = firstFreeSlot;
+                    item.SlotType = type;
+                    item.Count = count;
+                    checkStackable[firstFreeSlot] = item;
+                    tasks.Add(new ItemAdd(item));
+                    count = 0;
+                }
+                else if (dontAddPartialCount)
+                {
+                    return null;
+                }
+            }
+
+            if (item.Template.LootQuestId > 0)
+                Owner.Quests.OnItemGather(item, item.Count);
+
+            if (type == SlotType.Inventory)
+                Items = checkStackable;
+            else if (type == SlotType.Bank)
+                Bank = checkStackable;
+            /*else if (type == SlotType.Mail)
+                return null; //TODO
+            else if (type == SlotType.Trade)
+                return null; //TODO */
+
+            return tasks;
+        }
+
         public Item AddItem(Item item)
         {
             if (item.Slot == -1)
@@ -252,38 +330,38 @@ namespace AAEmu.Game.Models.Game.Char
             return null;
         }
 
-        public void RemoveItem(Item item, bool release)
+        public void RemoveItem(Item item, bool release, ItemTaskType taskType)
         {
+            if (item == null)
+                return;
+
+            var tasks = new List<ItemTask>();
             if (item.SlotType == SlotType.Equipment)
                 Equip[item.Slot] = null;
 
             else if (item.SlotType == SlotType.Inventory)
-            {
                 Items[item.Slot] = null;
-                if (_freeSlot == -1 || item.Slot < _freeSlot)
-                    _freeSlot = item.Slot;
-            }
-            else if (item.SlotType == SlotType.Bank)
-            {
-                Bank[item.Slot] = null;
-                if (_freeBankSlot == -1 || item.Slot < _freeBankSlot)
-                    _freeBankSlot = item.Slot;
-            }
 
+            else if (item.SlotType == SlotType.Bank)
+                Bank[item.Slot] = null;
+
+
+            tasks.Add(new ItemRemove(item));
             if (release)
                 ItemIdManager.Instance.ReleaseId((uint)item.Id);
-            
             lock (_removedItems)
             {
                 if (!_removedItems.Contains(item.Id))
                     _removedItems.Add(item.Id);
             }
+
+            //TODO: Call with ItemTaskType
+            Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
         }
 
-        public void RemoveItem(uint templateId, int count, ItemTaskType taskType, List<ItemTask> tasks = null)
+        public void RemoveItem(uint templateId, int count, ItemTaskType taskType)
         {
-            if (tasks == null)
-                tasks = new List<ItemTask>();
+            var tasks = new List<ItemTask>();
             foreach (var item in Items)
             {
                 if (item != null && item.TemplateId == templateId)
@@ -315,6 +393,34 @@ namespace AAEmu.Game.Models.Game.Char
             }
             Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
             return;
+        }
+        
+        public void RemoveItem(Item item, bool release)
+        {
+            if (item.SlotType == SlotType.Equipment)
+                Equip[item.Slot] = null;
+
+            else if (item.SlotType == SlotType.Inventory)
+            {
+                Items[item.Slot] = null;
+                if (_freeSlot == -1 || item.Slot < _freeSlot)
+                    _freeSlot = item.Slot;
+            }
+            else if (item.SlotType == SlotType.Bank)
+            {
+                Bank[item.Slot] = null;
+                if (_freeBankSlot == -1 || item.Slot < _freeBankSlot)
+                    _freeBankSlot = item.Slot;
+            }
+
+            if (release)
+                ItemIdManager.Instance.ReleaseId((uint)item.Id);
+
+            lock (_removedItems)
+            {
+                if (!_removedItems.Contains(item.Id))
+                    _removedItems.Add(item.Id);
+            }
         }
 
         public List<(Item Item, int Count)> RemoveItem(uint templateId, int count)
@@ -559,7 +665,7 @@ namespace AAEmu.Game.Models.Game.Char
 
             return slot;
         }
-
+        
         private void SendFragmentedInventory(SlotType slotType, byte numItems, Item[] bag)
         {
             var tempItem = new Item[10];
@@ -631,6 +737,63 @@ namespace AAEmu.Game.Models.Game.Char
                     isBank ? (byte)Owner.NumBankSlots : Owner.NumInventorySlots
                 )
             );
+        }
+        public int GetFirstFreeSlot(SlotType type)
+        {
+            int slot = -1;
+            if (type == SlotType.Inventory)
+            {
+                for (int i = 0; i < Owner.NumInventorySlots; i++)
+                {
+                    if (Items[i] == null)
+                    {
+                        slot = i;
+                        break;
+                    }
+                }
+            }
+            else if (type == SlotType.Bank)
+            {
+                for (int i = 0; i < Owner.NumBankSlots; i++)
+                {
+                    if (Items[i] == null)
+                    {
+                        slot = i;
+                        break;
+                    }
+                }
+            }
+
+            return slot;
+        }
+
+        public int GetFirstFreeSlot(SlotType type, int ignoreSlot)
+        {
+            int slot = -1;
+            if (type == SlotType.Inventory)
+            {
+                for (int i = 0; i < Owner.NumInventorySlots; i++)
+                {
+                    if (Items[i] == null && i != ignoreSlot)
+                    {
+                        slot = i;
+                        break;
+                    }
+                }
+            }
+            else if (type == SlotType.Bank)
+            {
+                for (int i = 0; i < Owner.NumBankSlots; i++)
+                {
+                    if (Items[i] == null && i != ignoreSlot)
+                    {
+                        slot = i;
+                        break;
+                    }
+                }
+            }
+
+            return slot;
         }
     }
 }

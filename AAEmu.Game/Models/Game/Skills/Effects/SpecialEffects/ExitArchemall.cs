@@ -22,6 +22,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             int value3,
             int value4)
         {
+            _log.Warn("Special effects: ExitArchemall");
             if (caster is Character character)
             {
                 character.DisabledSetPosition = true;
@@ -42,7 +43,6 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 character.InstanceId = 1; // TODO ....
                 character.Position = character.WorldPosition.Clone();
                 character.WorldPosition = null;
-                _log.Warn("Special effects: ExitArchemall");
             }
         }
     }

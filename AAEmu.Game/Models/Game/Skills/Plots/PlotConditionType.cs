@@ -1,23 +1,23 @@
-namespace AAEmu.Game.Models.Game.Skills.Plots
+﻿namespace AAEmu.Game.Models.Game.Skills.Plots
 {
     public enum PlotConditionType
     {
-        Distance = 1,
-        Unk2 = 2,
-        Unk3 = 3,
-        Unk4 = 4,
+        Level = 1,
+        Relation = 2,
+        Direction = 3,
+        Unk4 = 4,       // DOESNT EXIST
         BuffTag = 5,
-        Unk6 = 6,
-        Unk7 = 7,
-        Unk8 = 8,
-        Unk9 = 9,
-        Unk10 = 10,
-        Unk11 = 11,
-        Unk12 = 12,
-        Unk13 = 13,
-        Unk14 = 14,
-        Unk15 = 15,
-        Unk16 = 16,
-        Unk17 = 17,
+        WeaponEquipStatus = 6,
+        Chance = 7,
+        Dead = 8,
+        CombatDiceResult = 9,
+        InstrumentType = 10,
+        Range = 11,
+        Variable = 12,
+        UnitAttrib = 13,
+        Actability = 14,
+        Stealth = 15,
+        Visible = 16,
+        AbLevel = 17,
     }
 }

@@ -11,15 +11,12 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
         public override void Use(Unit caster, Doodad owner, uint skillId)
         {
-            _log.Debug("DoodadFuncTod : NextPhase {0}, SkillId {1}", NextPhase, skillId);
+            _log.Debug("DoodadFuncTod : NextPhase {0}, skillId {1}, Tod {2}", NextPhase, skillId, Tod);
 
-            if (NextPhase > 0)
+            if (owner.FuncTask == null)
             {
-                if (owner.FuncTask == null)
-                {
-                    // выполняем действие
-                    owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(owner), true);
-                }
+                // perform action
+                owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(owner), true);
             }
         }
     }

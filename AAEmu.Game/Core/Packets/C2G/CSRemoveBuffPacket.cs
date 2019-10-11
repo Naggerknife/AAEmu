@@ -24,10 +24,10 @@ namespace AAEmu.Game.Core.Packets.C2G
             if (effect == null)
                 return;
             if (effect.Template is BuffTemplate template)
-                if (template.Kind == BuffKind.Good)
+                if (template.Kind == BuffKindType.Good)
                     effect.Exit();
             if (effect.Template is BuffEffect buffEffect)
-                if (buffEffect.Buff.Kind == BuffKind.Good)
+                if (buffEffect.Buff.Kind == BuffKindType.Good)
                     effect.Exit();
         }
     }

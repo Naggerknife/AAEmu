@@ -85,7 +85,7 @@ namespace AAEmu.Game.Models.Game.Units
                         skillObject.Flag = SkillObjectType.None;
 
                     var skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId)); // TODO переделать...
-                    skill.Use(npc, skillCaster, skillCastTarget, skillObject);
+                    skill.Start(npc, skillCaster, skillCastTarget, skillObject);
                     LoopAuto(npc);
                 }
             }

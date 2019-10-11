@@ -21,9 +21,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             if (BuffTagId > 0 && !target.Effects.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(BuffTagId)))
                 return;
             if (DispelCount > 0)
-                target.Effects.RemoveBuffs(BuffKind.Good, DispelCount); //TODO ....
+                target.Effects.RemoveBuffs(BuffKindType.Good, DispelCount); //TODO ....
             if (CureCount > 0)
-                target.Effects.RemoveBuffs(BuffKind.Bad, CureCount);
+                target.Effects.RemoveBuffs(BuffKindType.Bad, CureCount);
         }
     }
 }

@@ -11,16 +11,19 @@ using AAEmu.Game.Models.Game.Expeditions;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Tasks;
 using AAEmu.Game.Models.Tasks.Skills;
+using NLog;
 
 namespace AAEmu.Game.Models.Game.Units
 {
     public class Unit : BaseUnit
     {
-        //protected static readonly Logger Log = LogManager.GetCurrentClassLogger();
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
-        private Task _regenTask;
+        private Task _regenTask { get; set; }
+        private Task _comboTask { get; set; }
         public uint ModelId { get; set; }
         public byte Level { get; set; }
         public int Hp { get; set; }
@@ -55,12 +58,13 @@ namespace AAEmu.Game.Models.Game.Units
         public Expedition Expedition { get; set; }
         public bool IsInBattle { get; set; }
         public int SummarizeDamage { get; set; }
-        public bool IsAutoAttack = false;
-        public uint SkillId;
+        public bool IsAutoAttack { get; set; } = false;
+        public uint SkillId { get; set; }
         public ushort TlId { get; set; }
         public GameConnection Connection { get; set; }
         public Dictionary<uint, DateTime> Cooldowns { get; set; }
         public Item[] Equip { get; set; }
+        public DateTime GlobalCooldown { get; set; }
 
 
         /// <summary>
@@ -78,6 +82,8 @@ namespace AAEmu.Game.Models.Game.Units
             IsInBattle = false;
             Name = "";
             Equip = new Item[28];
+            _regenTask = null;
+            _comboTask = null;
         }
 
         public virtual void ReduceCurrentHp(Unit attacker, int value)
@@ -260,5 +266,21 @@ namespace AAEmu.Game.Models.Game.Units
         {
             SendPacket(new SCErrorMsgPacket(type, 0, true));
         }
+        public bool CheckSkillCooldownsOkay(SkillTemplate template)
+        {
+            if (GetSkillCooldown(template.Id, template.IgnoreGlobalCooldown) > 0)
+                return false;
+
+            //if (template.SkillControllerId > 0 && !CheckActiveController(template.SkillControllerId))
+            //return false;
+
+            return true;
+        }
+        public int GetSkillCooldown(uint skillId, bool ignoreGCD = false)
+        {
+            int maxCooldown = Math.Max(ignoreGCD ? 0 : ((TimeSpan)(GlobalCooldown - DateTime.Now)).Milliseconds, Cooldowns.ContainsKey(skillId) ? ((TimeSpan)(Cooldowns[skillId] - DateTime.Now)).Milliseconds : 0);
+            return Math.Max(maxCooldown, 0);
+        }
+
     }
 }

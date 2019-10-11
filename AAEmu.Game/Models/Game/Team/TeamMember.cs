@@ -1,20 +1,18 @@
-using AAEmu.Commons.Network;
-using AAEmu.Commons.Utils;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Utils;
-using Point = AAEmu.Game.Models.Game.World.Point;
 
 namespace AAEmu.Game.Models.Game.Team
 {
     public class TeamMember : PacketMarshaler
     {
         public Character Character { get; set; }
-        public MemberRole Role { get; set; }
+        public MemberRoleType Role { get; set; }
 
         public TeamMember(Character character = null)
         {
             Character = character;
-            Role = MemberRole.Undecided;
+            Role = MemberRoleType.Undecided;
         }
 
         public override PacketStream Write(PacketStream stream)

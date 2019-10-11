@@ -1,0 +1,1 @@
+﻿namespace AAEmu.Game.Models.Game.Items{    public class ItemDyeings    {		public ulong Id { get; set; }		public int ItemId { get; set; }		public int IyeingColorId { get; set; }	}}

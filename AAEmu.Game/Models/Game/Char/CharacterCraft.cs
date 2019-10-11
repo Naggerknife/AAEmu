@@ -1,4 +1,4 @@
-using AAEmu.Game.Core.Managers;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Crafts;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
@@ -58,7 +58,7 @@ namespace AAEmu.Game.Models.Game.Char
                 target.ObjId = doodadId;
 
                 var skill = new Skill(SkillManager.Instance.GetSkillTemplate(craft.SkillId));
-                skill.Use(Owner, caster, target);
+                skill.Start(Owner, caster, target);
             }
         }
 

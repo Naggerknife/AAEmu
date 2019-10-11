@@ -1,0 +1,1 @@
+﻿namespace AAEmu.Game.Models.Game.NPChar{    public class NpcChatBubbles    { 	    public uint Id { get; set; }		public uint Bubble { get; set; }		public uint AiEventId { get; set; }	}}

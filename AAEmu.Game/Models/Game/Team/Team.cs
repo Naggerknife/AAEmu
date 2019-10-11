@@ -1,5 +1,4 @@
-using System;
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.World;
@@ -63,7 +62,7 @@ namespace AAEmu.Game.Models.Game.Team
             return 0;
         }
 
-        public bool ChangeRole(uint id, MemberRole role)
+        public bool ChangeRole(uint id, MemberRoleType role)
         {
             foreach (var member in Members)
             {
@@ -138,7 +137,7 @@ namespace AAEmu.Game.Models.Game.Team
         {
             foreach (var member in Members)
             {
-                if (member?.Character == null || !member.Character.IsOnline || member.Character.Id == id) 
+                if (member?.Character == null || !member.Character.IsOnline || member.Character.Id == id)
                     continue;
                 member.Character.SendPacket(packet);
             }

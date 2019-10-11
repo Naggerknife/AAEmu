@@ -109,13 +109,13 @@ namespace AAEmu.Game.Models.Game.Units
                     case BuffTemplate template:
                         switch (template.Kind)
                         {
-                            case BuffKind.Good:
+                            case BuffKindType.Good:
                                 goodBuffs.Add(effect);
                                 break;
-                            case BuffKind.Bad:
+                            case BuffKindType.Bad:
                                 badBuffs.Add(effect);
                                 break;
-                            case BuffKind.Hidden:
+                            case BuffKindType.Hidden:
                                 hiddenBuffs.Add(effect);
                                 break;
                             default:
@@ -126,13 +126,13 @@ namespace AAEmu.Game.Models.Game.Units
                     case BuffEffect buffEffect:
                         switch (buffEffect.Buff.Kind)
                         {
-                            case BuffKind.Good:
+                            case BuffKindType.Good:
                                 goodBuffs.Add(effect);
                                 break;
-                            case BuffKind.Bad:
+                            case BuffKindType.Bad:
                                 badBuffs.Add(effect);
                                 break;
-                            case BuffKind.Hidden:
+                            case BuffKindType.Hidden:
                                 hiddenBuffs.Add(effect);
                                 break;
                             default:
@@ -152,7 +152,7 @@ namespace AAEmu.Game.Models.Game.Units
                 if (owner == null)
                     return;
 
-                effect.State = EffectState.Created;
+                effect.State = EffectStateType.Created;
                 effect.Index = _nextIndex; // TODO need safe increment...
 
                 if (++_nextIndex == uint.MaxValue)
@@ -197,7 +197,7 @@ namespace AAEmu.Game.Models.Game.Units
                 else
                 {
                     effect.InUse = true;
-                    effect.State = EffectState.Acting;
+                    effect.State = EffectStateType.Acting;
                     effect.Template.Start(effect.Caster, owner, effect); // TODO поменять на target
                 }
             }
@@ -280,7 +280,7 @@ namespace AAEmu.Game.Models.Game.Units
             }
         }
 
-        public void RemoveBuffs(BuffKind kind, int count)
+        public void RemoveBuffs(BuffKindType kind, int count)
         {
             var own = GetOwner();
             if (own == null)
@@ -349,9 +349,7 @@ namespace AAEmu.Game.Models.Game.Units
                 return;
 
             foreach (var e in new List<Effect>(_effects))
-                if (e != null &&
-                    (e.Template is BuffTemplate template && template.Stealth ||
-                     e.Template is BuffEffect effect && effect.Buff.Stealth))
+                if (e != null && (e.Template is BuffTemplate template && template.Stealth || e.Template is BuffEffect effect && effect.Buff.Stealth))
                     e.Exit();
         }
         public void RemoveOngoingBuff()

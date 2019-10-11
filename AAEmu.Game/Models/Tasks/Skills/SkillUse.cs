@@ -22,7 +22,7 @@ namespace AAEmu.Game.Models.Tasks.Skills
 
         public override void Execute()
         {
-            _skill?.Use(_caster, _casterCaster, _targetCaster, _skillObject);
+            _skill?.Start(_caster, _casterCaster, _targetCaster, _skillObject);
         }
     }
 }

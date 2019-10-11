@@ -9,7 +9,6 @@ namespace AAEmu.Game.Models.Game.Units
         Character = 0,
         Npc = 1,
         Slave = 2,
-
     }
 
     public class BaseUnit : GameObject
@@ -18,10 +17,12 @@ namespace AAEmu.Game.Models.Game.Units
         public SystemFaction Faction { get; set; }
         public virtual float Scale => 1f;
         public Effects Effects { get; set; }
+        public SkillModifiers Modifiers { get; set; }
 
         public BaseUnit()
         {
             Effects = new Effects(this);
+            Modifiers = new SkillModifiers();
         }
 
         public virtual void AddBonus(uint bonusIndex, Bonus bonus)
@@ -30,6 +31,26 @@ namespace AAEmu.Game.Models.Game.Units
 
         public virtual void RemoveBonus(uint bonusIndex, UnitAttribute attribute)
         {
+        }
+        public virtual double ApplySkillModifiers(Skill skill, SkillAttributeType attribute, double baseValue)
+        {
+            return Modifiers.ApplyModifiers(skill, attribute, baseValue);
+        }
+
+        public virtual SkillTargetRelationType GetRelationTo(BaseUnit other)
+        {
+            if (Faction.Id == other.Faction.Id)
+                return SkillTargetRelationType.Friendly;
+
+            var relation = other.Faction.GetRelationState(Faction.Id);
+            if (relation == RelationState.Friendly)
+                return SkillTargetRelationType.Friendly;
+
+            else if (relation == RelationState.Hostile)
+                return SkillTargetRelationType.Hostile;
+
+            else
+                return SkillTargetRelationType.Others;
         }
     }
 }

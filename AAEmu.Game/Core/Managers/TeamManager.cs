@@ -199,15 +199,15 @@ namespace AAEmu.Game.Core.Managers
             newTeam.BroadcastPacket(new SCTeamPingPosPacket(true, new Point(0, 0, 0), 0)); // TODO - GET "REAL" POSITION FROM DUMP
         }
 
-        public void AskRiskyTeam(Character unit, uint teamId, uint targetId, RiskyAction riskyAction)
+        public void AskRiskyTeam(Character unit, uint teamId, uint targetId, RiskyActionType riskyAction)
         {
             var activeTeam = GetActiveTeam(teamId);
             if (activeTeam == null) return;
             var isDisband = false;
 
-            if (riskyAction == RiskyAction.Kick && activeTeam.OwnerId != unit.Id ||
-                riskyAction == RiskyAction.Leave && unit.Id != targetId) return;
-            if ((riskyAction == RiskyAction.Leave || riskyAction == RiskyAction.Kick) &&
+            if (riskyAction == RiskyActionType.Kick && activeTeam.OwnerId != unit.Id ||
+                riskyAction == RiskyActionType.Leave && unit.Id != targetId) return;
+            if ((riskyAction == RiskyActionType.Leave || riskyAction == RiskyActionType.Kick) &&
                 activeTeam.RemoveMember(targetId))
             {
                 if (targetId == activeTeam.OwnerId)
@@ -225,19 +225,19 @@ namespace AAEmu.Game.Core.Managers
                 }
 
                 activeTeam.BroadcastPacket(new SCTeamMemberLeavedPacket(teamId, targetId,
-                    riskyAction == RiskyAction.Kick));
+                    riskyAction == RiskyActionType.Kick));
                 var target = WorldManager.Instance.GetCharacterById(targetId);
                 if (target != null)
                 {
                     target.InParty = false;
-                    target.SendPacket(new SCLeavedTeamPacket(teamId, riskyAction == RiskyAction.Kick, false));
+                    target.SendPacket(new SCLeavedTeamPacket(teamId, riskyAction == RiskyActionType.Kick, false));
                 }
             }
 
             // TODO - NEED TO FIND WHY NEED THIS
             activeTeam.BroadcastPacket(new SCTeamAckRiskyActionPacket(teamId, targetId, riskyAction, 0, 0));
 
-            if (isDisband || riskyAction == RiskyAction.Dismiss || activeTeam.MembersCount() <= 1)
+            if (isDisband || riskyAction == RiskyActionType.Dismiss || activeTeam.MembersCount() <= 1)
             {
                 activeTeam.BroadcastPacket(new SCTeamDismissedPacket(teamId));
                 foreach (var member in activeTeam.Members)
@@ -272,9 +272,9 @@ namespace AAEmu.Game.Core.Managers
             activeTeam.BroadcastPacket(new SCTeamBecameRaidTeamPacket(activeTeam.Id));
         }
 
-        public void SetTeamMemberRole(Character unit, uint teamId, uint memberId, MemberRole role)
+        public void SetTeamMemberRole(Character unit, uint teamId, uint memberId, MemberRoleType role)
         {
-            if (!Enum.IsDefined(typeof(MemberRole), role)) role = MemberRole.Undecided;
+            if (!Enum.IsDefined(typeof(MemberRoleType), role)) role = MemberRoleType.Undecided;
             var activeTeam = GetActiveTeam(teamId);
             if (activeTeam == null || unit.Id != memberId) return;
 
@@ -284,12 +284,12 @@ namespace AAEmu.Game.Core.Managers
             }
         }
 
-        public void SetOverHeadMarker(Character unit, uint teamId, OverHeadMark index, byte type, uint targetId)
+        public void SetOverHeadMarker(Character unit, uint teamId, OverHeadMarkType index, byte type, uint targetId)
         {
             var activeTeam = GetActiveTeam(teamId);
             if (activeTeam == null || activeTeam.OwnerId != unit.Id && !activeTeam.IsParty) return;
 
-            if (Enum.IsDefined(typeof(OverHeadMark), index) && index != OverHeadMark.ResetAll && type <= 2)
+            if (Enum.IsDefined(typeof(OverHeadMarkType), index) && index != OverHeadMarkType.ResetAll && type <= 2)
             {
                 activeTeam.MarksList[(int)index].Item1 = type;
                 activeTeam.MarksList[(int)index].Item2 = type != 0 ? targetId : 0u;
@@ -297,7 +297,7 @@ namespace AAEmu.Game.Core.Managers
             else
             {
                 activeTeam.ResetMarks();
-                index = OverHeadMark.ResetAll;
+                index = OverHeadMarkType.ResetAll;
                 type = 100;
                 targetId = 0;
             }

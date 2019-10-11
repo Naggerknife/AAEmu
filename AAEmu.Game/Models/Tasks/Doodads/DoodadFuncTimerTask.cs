@@ -20,8 +20,10 @@ namespace AAEmu.Game.Models.Tasks.Doodads
             _owner.FuncGroupId = _nextPhase;
             var funcs = DoodadManager.Instance.GetPhaseFunc(_owner.FuncGroupId);
             foreach (var func in funcs)
+            {
                 func.Use(_caster, _owner, _skillId);
-            //_owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(_owner), true);
+            }
+            _owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(_owner), true);
         }
     }
 }

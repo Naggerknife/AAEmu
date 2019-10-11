@@ -85,7 +85,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public bool Knockdown { get; set; }
         public bool TickAreaExcludeSource { get; set; }
         public bool FallDamageImmune { get; set; }
-        public BuffKind Kind { get; set; }
+        public BuffKindType Kind { get; set; }
         public uint TransformBuffId { get; set; }
         public bool BlankMinded { get; set; }
         public bool Fastened { get; set; }

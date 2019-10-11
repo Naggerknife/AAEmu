@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
@@ -79,7 +79,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 character.SendPacket(new SCTargetChangedPacket(character.ObjId, 0));
             }
 
-            character.SendPacket(new SCUnitsRemovedPacket(new[] {ObjId}));
+            character.SendPacket(new SCDoodadsRemovedPacket(true, new[] { ObjId }));
         }
 
         public PacketStream Write(PacketStream stream)

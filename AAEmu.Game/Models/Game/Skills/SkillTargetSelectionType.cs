@@ -6,11 +6,11 @@
      * For example, a skill that originates from the caster (eg. Thwart, songcraft songs, etc.)
      * would be type.Source, meteor would be type.location, etc.
      */
-    public enum SkillTargetSelection : byte
+    public enum SkillTargetSelectionType : byte
     {
         Source = 1,
         Target = 2,
-        Location = 3,
-        Line = 4
+        Line = 3,
+        Location = 4
     }
 }

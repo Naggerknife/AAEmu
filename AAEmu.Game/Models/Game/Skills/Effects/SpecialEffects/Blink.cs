@@ -23,13 +23,13 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             int value3,
             int value4)
         {
+            _log.Warn("Special effects: Blink");
             if (caster is Character character)
             {
                 var (endX, endY) = MathUtil.AddDistanceToFront(value1, character.Position.X, character.Position.Y, (sbyte)value2);
                 var endZ = character.Position.Z;
                 character.SendPacket(new SCBlinkUnitPacket(caster.ObjId, value1, value2, endX, endY, endZ));
             }
-            _log.Warn("Special effects: Blink");
         }
     }
 }
