@@ -772,13 +772,23 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public void Apply(Unit caster, SkillCaster casterType, BaseUnit targetSelf, SkillCastTarget targetType, SkillObject skillObject)
         {
-            var cooldownEnd = DateTime.Now.AddMilliseconds(Template.CooldownTime);
-            caster.Cooldowns[Id] = cooldownEnd;
-            var effectsToApply = new List<EffectToApply>();
+            //var cooldownEnd = DateTime.Now.AddMilliseconds(Template.CooldownTime);
+            //caster.Cooldowns[Id] = cooldownEnd;
+            //var effectsToApply = new List<EffectToApply>();
+
+            var targets = new List<BaseUnit>(); // TODO crutches
+            if (Template.TargetAreaRadius > 0)
+            {
+                var obj = WorldManager.Instance.GetAround<BaseUnit>(targetSelf, Template.TargetAreaRadius);
+                targets.AddRange(obj);
+            }
+            else
+                targets.Add(targetSelf);
+
             foreach (var effect in Template.Effects)
             {
                 _log.Warn(effect.Template.ToString());
-                var targets = GetTargets(caster, targetType, Template.TargetType, (SkillEffectTypes)effect.ApplicationMethodId);
+                //var targets = GetTargets(caster, targetType, Template.TargetType, (SkillEffectTypes)effect.ApplicationMethodId);
                 foreach (var target in targets)
                 {
                     if (effect.StartLevel > caster.Level || effect.EndLevel < caster.Level)

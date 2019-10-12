@@ -1,44 +1,39 @@
--- CREATE DATABASE  IF NOT EXISTS `aaemu_game` /*!40100 DEFAULT CHARACTER SET latin1 */;
--- USE `aaemu_game`;
--- MySQL dump 10.13  Distrib 5.7.17, for Win64 (x86_64)
---
--- Host: 127.0.0.1    Database: aaemu_game
--- ------------------------------------------------------
--- Server version	5.7.23-log
+/*
+Navicat MySQL Data Transfer
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+Source Server         : archeage
+Source Server Version : 80012
+Source Host           : localhost:3306
+Source Database       : aaemu_game12
 
---
--- Table structure for table `abilities`
---
+Target Server Type    : MYSQL
+Target Server Version : 80012
+File Encoding         : 65001
 
+Date: 2019-10-12 03:17:26
+*/
+
+SET FOREIGN_KEY_CHECKS=0;
+
+-- ----------------------------
+-- Table structure for abilities
+-- ----------------------------
 DROP TABLE IF EXISTS `abilities`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `abilities` (
   `id` tinyint(3) unsigned NOT NULL,
   `exp` int(11) NOT NULL,
   `owner` int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `actabilities`
---
+-- ----------------------------
+-- Records of abilities
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for actabilities
+-- ----------------------------
 DROP TABLE IF EXISTS `actabilities`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `actabilities` (
   `id` int(10) unsigned NOT NULL,
   `point` int(10) unsigned NOT NULL DEFAULT '0',
@@ -46,48 +41,48 @@ CREATE TABLE `actabilities` (
   `owner` int(10) unsigned NOT NULL,
   PRIMARY KEY (`owner`,`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `appellations`
---
+-- ----------------------------
+-- Records of actabilities
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for appellations
+-- ----------------------------
 DROP TABLE IF EXISTS `appellations`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `appellations` (
   `id` int(10) unsigned NOT NULL,
   `active` tinyint(1) NOT NULL DEFAULT '0',
   `owner` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `blocked`
---
+-- ----------------------------
+-- Records of appellations
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for blocked
+-- ----------------------------
 DROP TABLE IF EXISTS `blocked`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `blocked` (
   `owner` int(11) NOT NULL,
   `blocked_id` int(11) NOT NULL,
   PRIMARY KEY (`owner`,`blocked_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `cash_shop_item`
---
+-- ----------------------------
+-- Records of blocked
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for cash_shop_item
+-- ----------------------------
 DROP TABLE IF EXISTS `cash_shop_item`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cash_shop_item` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'shop_id',
   `uniq_id` int(10) unsigned DEFAULT '0' COMMENT '唯一ID',
-  `cash_name` varchar(255) NOT NULL COMMENT '出售名称',
+  `cash_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '出售名称',
   `main_tab` tinyint(3) unsigned DEFAULT '1' COMMENT '主分类1-6',
   `sub_tab` tinyint(3) unsigned DEFAULT '1' COMMENT '子分类1-7',
   `level_min` tinyint(3) unsigned DEFAULT '0' COMMENT '等级限制',
@@ -114,16 +109,59 @@ CREATE TABLE `cash_shop_item` (
   `event_date` datetime DEFAULT '0001-01-01 00:00:00' COMMENT '活动时间',
   `dis_price` int(10) unsigned DEFAULT '0' COMMENT '当前售价',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=20100054 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='此表来自于代码中的字段并去除重复字段生成。字段名称和内容以代码为准。';
-/*!40101 SET character_set_client = @saved_cs_client */;
+) ENGINE=InnoDB AUTO_INCREMENT=20100054 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='此表来自于代码中的字段并去除重复字段生成。字段名称和内容以代码为准。';
 
---
--- Table structure for table `characters`
---
+-- ----------------------------
+-- Records of cash_shop_item
+-- ----------------------------
+INSERT INTO `cash_shop_item` VALUES ('20100011', '20100011', '1-1', '1', '1', '0', '0', '29176', '0', '0', '0', '0', '0', '0', '2019-05-01 14:10:08', '2055-06-16 14:10:12', '0', '874', '85', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100012', '20100012', '1-2', '1', '2', '0', '0', '29177', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100013', '20100013', '1-3', '1', '3', '0', '0', '29178', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100014', '20100014', '1-4', '1', '4', '0', '0', '29179', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100015', '20100015', '1-5', '1', '5', '0', '0', '29180', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100016', '20100016', '1-6', '1', '6', '0', '0', '29181', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100017', '20100017', '1-7', '1', '7', '0', '0', '29182', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100018', '20100018', '2-1', '2', '1', '0', '0', '29183', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100019', '20100019', '2-1', '2', '1', '0', '0', '29184', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100020', '20100020', '2-2', '2', '2', '0', '0', '29185', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100021', '20100021', '2-3', '2', '3', '0', '0', '29186', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100022', '20100022', '2-4', '2', '4', '0', '0', '29187', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100023', '20100023', '2-5', '2', '5', '0', '0', '29188', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100024', '20100024', '2-6', '2', '6', '0', '0', '29189', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100025', '20100025', '2-7', '2', '7', '0', '0', '29190', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100026', '20100026', '3-1', '3', '1', '0', '0', '29191', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100027', '20100027', '3-2', '3', '2', '0', '0', '29192', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100028', '20100028', '3-3', '3', '3', '0', '0', '29193', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100029', '20100029', '3-4', '3', '4', '0', '0', '29194', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100030', '20100030', '3-5', '3', '5', '0', '0', '29195', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100031', '20100031', '3-6', '3', '6', '0', '0', '29196', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100032', '20100032', '3-7', '3', '7', '0', '0', '29197', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100033', '20100033', '4-1', '4', '1', '0', '0', '29198', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100034', '20100034', '4-2', '4', '2', '0', '0', '29199', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100035', '20100035', '4-3', '4', '3', '0', '0', '29200', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100036', '20100036', '4-4', '4', '4', '0', '0', '29201', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100037', '20100037', '4-6', '4', '5', '0', '0', '29202', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100038', '20100038', '4-6', '4', '6', '0', '0', '29203', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100039', '20100039', '4-7', '4', '7', '0', '0', '29204', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100040', '20100040', '5-1', '5', '1', '0', '0', '29205', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100041', '20100041', '5-2', '5', '2', '0', '0', '29206', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100042', '20100042', '5-3', '5', '3', '0', '0', '29207', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100043', '20100043', '5-4', '5', '4', '0', '0', '29208', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100044', '20100044', '5-5', '5', '5', '0', '0', '29209', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100045', '20100045', '5-6', '5', '6', '0', '0', '29210', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100046', '20100046', '5-7', '5', '7', '0', '0', '29211', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100047', '20100047', '6-1', '6', '1', '0', '0', '29212', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100048', '20100048', '6-2', '6', '2', '0', '0', '29213', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100049', '20100049', '6-3', '6', '3', '0', '0', '29214', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100050', '20100050', '6-4', '6', '4', '0', '0', '29215', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100051', '20100051', '6-5', '6', '5', '0', '0', '29216', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100052', '20100052', '6-6', '6', '6', '0', '0', '29217', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
+INSERT INTO `cash_shop_item` VALUES ('20100053', '20100053', '6-7', '6', '7', '0', '0', '29218', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0001-01-01 00:00:00', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0001-01-01 00:00:00', '0');
 
+-- ----------------------------
+-- Table structure for characters
+-- ----------------------------
 DROP TABLE IF EXISTS `characters`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `characters` (
   `id` int(11) unsigned NOT NULL,
   `account_id` int(11) unsigned NOT NULL,
@@ -184,56 +222,74 @@ CREATE TABLE `characters` (
   `deleted` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`account_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `completed_quests`
---
+-- ----------------------------
+-- Records of characters
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for completed_quests
+-- ----------------------------
 DROP TABLE IF EXISTS `completed_quests`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `completed_quests` (
   `id` int(11) unsigned NOT NULL,
   `data` tinyblob NOT NULL,
   `owner` int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`,`owner`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `expedition_members`
---
+-- ----------------------------
+-- Records of completed_quests
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for expeditions
+-- ----------------------------
+DROP TABLE IF EXISTS `expeditions`;
+CREATE TABLE `expeditions` (
+  `id` int(11) NOT NULL,
+  `owner` int(11) NOT NULL,
+  `owner_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `mother` int(11) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`,`owner`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+-- ----------------------------
+-- Records of expeditions
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for expedition_members
+-- ----------------------------
 DROP TABLE IF EXISTS `expedition_members`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `expedition_members` (
   `character_id` int(11) NOT NULL,
   `expedition_id` int(11) NOT NULL,
-  `name` varchar(128) NOT NULL,
+  `name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `level` tinyint(4) unsigned NOT NULL,
   `role` tinyint(4) unsigned NOT NULL,
   `last_leave_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `ability1` tinyint(4) unsigned NOT NULL,
   `ability2` tinyint(4) unsigned NOT NULL,
   `ability3` tinyint(4) unsigned NOT NULL,
-  `memo` varchar(128) NOT NULL,
+  `memo` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`character_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `expedition_role_policies`
---
+-- ----------------------------
+-- Records of expedition_members
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for expedition_role_policies
+-- ----------------------------
 DROP TABLE IF EXISTS `expedition_role_policies`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `expedition_role_policies` (
   `expedition_id` int(11) NOT NULL,
   `role` tinyint(4) unsigned NOT NULL,
-  `name` varchar(128) NOT NULL,
+  `name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `dominion_declare` tinyint(1) NOT NULL,
   `invite` tinyint(1) NOT NULL,
   `expel` tinyint(1) NOT NULL,
@@ -245,33 +301,15 @@ CREATE TABLE `expedition_role_policies` (
   `join_siege` tinyint(1) NOT NULL,
   PRIMARY KEY (`expedition_id`,`role`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `expeditions`
---
+-- ----------------------------
+-- Records of expedition_role_policies
+-- ----------------------------
 
-DROP TABLE IF EXISTS `expeditions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `expeditions` (
-  `id` int(11) NOT NULL,
-  `owner` int(11) NOT NULL,
-  `owner_name` varchar(128) NOT NULL,
-  `name` varchar(128) NOT NULL,
-  `mother` int(11) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`,`owner`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `family_members`
---
-
+-- ----------------------------
+-- Table structure for family_members
+-- ----------------------------
 DROP TABLE IF EXISTS `family_members`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `family_members` (
   `character_id` int(11) NOT NULL,
   `family_id` int(11) NOT NULL,
@@ -280,30 +318,30 @@ CREATE TABLE `family_members` (
   `title` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`family_id`,`character_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `friends`
---
+-- ----------------------------
+-- Records of family_members
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for friends
+-- ----------------------------
 DROP TABLE IF EXISTS `friends`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `friends` (
   `id` int(11) NOT NULL,
   `friend_id` int(11) NOT NULL,
   `owner` int(11) NOT NULL,
   PRIMARY KEY (`id`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `housings`
---
+-- ----------------------------
+-- Records of friends
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for housings
+-- ----------------------------
 DROP TABLE IF EXISTS `housings`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `housings` (
   `id` int(11) NOT NULL,
   `account_id` int(10) unsigned NOT NULL,
@@ -320,15 +358,15 @@ CREATE TABLE `housings` (
   `permission` tinyint(4) NOT NULL,
   PRIMARY KEY (`account_id`,`owner`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `items`
---
+-- ----------------------------
+-- Records of housings
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for items
+-- ----------------------------
 DROP TABLE IF EXISTS `items`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `items` (
   `id` bigint(20) unsigned NOT NULL,
   `type` varchar(100) NOT NULL,
@@ -347,19 +385,70 @@ CREATE TABLE `items` (
   PRIMARY KEY (`id`) USING BTREE,
   KEY `owner` (`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `mates`
---
+-- ----------------------------
+-- Records of items
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for mails
+-- ----------------------------
+DROP TABLE IF EXISTS `mails`;
+CREATE TABLE `mails` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` int(11) unsigned NOT NULL,
+  `status` int(11) NOT NULL,
+  `title` varchar(16) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `sender_name` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `attachments` int(11) NOT NULL,
+  `receiver_name` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `open_date` datetime NOT NULL,
+  `returned` int(11) NOT NULL,
+  `extra` int(11) NOT NULL,
+  `text` varchar(300) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `money_amount_1` int(11) NOT NULL,
+  `money_amount_2` int(11) NOT NULL,
+  `money_amount_3` int(11) NOT NULL,
+  `send_date` datetime NOT NULL,
+  `received_date` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of mails
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for mails_items
+-- ----------------------------
+DROP TABLE IF EXISTS `mails_items`;
+CREATE TABLE `mails_items` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `item0` bigint(20) unsigned NOT NULL,
+  `item1` bigint(20) unsigned NOT NULL,
+  `item2` bigint(20) unsigned NOT NULL,
+  `item3` bigint(20) unsigned NOT NULL,
+  `item4` bigint(20) unsigned NOT NULL,
+  `item5` bigint(20) unsigned NOT NULL,
+  `item6` bigint(20) unsigned NOT NULL,
+  `item7` bigint(20) unsigned NOT NULL,
+  `item8` bigint(20) unsigned NOT NULL,
+  `item9` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of mails_items
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for mates
+-- ----------------------------
 DROP TABLE IF EXISTS `mates`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `mates` (
   `id` int(11) unsigned NOT NULL,
   `item_id` bigint(20) unsigned NOT NULL,
-  `name` text NOT NULL,
+  `name` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `xp` int(11) NOT NULL,
   `level` tinyint(4) NOT NULL,
   `mileage` int(11) NOT NULL,
@@ -370,33 +459,33 @@ CREATE TABLE `mates` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`,`item_id`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `options`
---
+-- ----------------------------
+-- Records of mates
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for options
+-- ----------------------------
 DROP TABLE IF EXISTS `options`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `options` (
   `key` varchar(100) NOT NULL,
   `value` text NOT NULL,
   `owner` int(11) unsigned NOT NULL,
   PRIMARY KEY (`key`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `portal_book_coords`
---
+-- ----------------------------
+-- Records of options
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for portal_book_coords
+-- ----------------------------
 DROP TABLE IF EXISTS `portal_book_coords`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `portal_book_coords` (
   `id` int(11) NOT NULL,
-  `name` varchar(128) NOT NULL,
+  `name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `x` int(11) DEFAULT '0',
   `y` int(11) DEFAULT '0',
   `z` int(11) DEFAULT '0',
@@ -406,30 +495,30 @@ CREATE TABLE `portal_book_coords` (
   `owner` int(11) NOT NULL,
   PRIMARY KEY (`id`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `portal_visited_district`
---
+-- ----------------------------
+-- Records of portal_book_coords
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for portal_visited_district
+-- ----------------------------
 DROP TABLE IF EXISTS `portal_visited_district`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `portal_visited_district` (
   `id` int(11) NOT NULL,
   `subzone` int(11) NOT NULL,
   `owner` int(11) NOT NULL,
   PRIMARY KEY (`id`,`subzone`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `quests`
---
+-- ----------------------------
+-- Records of portal_visited_district
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for quests
+-- ----------------------------
 DROP TABLE IF EXISTS `quests`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `quests` (
   `id` int(11) unsigned NOT NULL,
   `template_id` int(11) unsigned NOT NULL,
@@ -438,15 +527,15 @@ CREATE TABLE `quests` (
   `owner` int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`,`owner`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `skills`
---
+-- ----------------------------
+-- Records of quests
+-- ----------------------------
 
+-- ----------------------------
+-- Table structure for skills
+-- ----------------------------
 DROP TABLE IF EXISTS `skills`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `skills` (
   `id` int(11) unsigned NOT NULL,
   `level` tinyint(4) NOT NULL,
@@ -454,23 +543,22 @@ CREATE TABLE `skills` (
   `owner` int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping events for database 'aaemu_game'
---
+-- ----------------------------
+-- Records of skills
+-- ----------------------------
 
---
--- Dumping routines for database 'aaemu_game'
---
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+-- ----------------------------
+-- Table structure for updates
+-- ----------------------------
+DROP TABLE IF EXISTS `updates`;
+CREATE TABLE `updates` (
+  `path` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  PRIMARY KEY (`path`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2019-09-07 19:12:10
+-- ----------------------------
+-- Records of updates
+-- ----------------------------
+INSERT INTO `updates` VALUES ('aaemu_game.sql');
+SET FOREIGN_KEY_CHECKS=1;
