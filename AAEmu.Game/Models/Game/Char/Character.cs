@@ -121,6 +121,7 @@ namespace AAEmu.Game.Models.Game.Char
         public CharacterCraft Craft { get; set; }
 
         public int AccessLevel { get; set;}
+        public Point LocalPingPosition { get; set; } // added as a GM command helper
         public Item Item { get; set; }  // Item который используется персонажем в каких либо действиях
 
         private bool _inParty;
@@ -1092,6 +1093,7 @@ namespace AAEmu.Game.Models.Game.Char
                 Slots[i] = new ActionSlot();
 
             Craft = new CharacterCraft(this);
+            LocalPingPosition = new Point();
 
             using (var connection = MySQL.CreateConnection())
             {

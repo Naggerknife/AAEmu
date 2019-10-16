@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using AAEmu.Commons.Utils;
@@ -21,6 +21,12 @@ namespace AAEmu.Game.Core.Managers
             return _commands.Keys.ToList();
         }
 
+        public ICommand GetCommandInterfaceByName(string commandName)
+        {
+            _commands.TryGetValue(commandName.ToLower(), out var command);
+            return command;
+        }
+
         public void Register(string name, ICommand command)
         {
             if (_commands.ContainsKey(name.ToLower()))
@@ -35,7 +41,8 @@ namespace AAEmu.Game.Core.Managers
             if (command == null)
                 return false;
 
-            if(AccessLevel.getLevel(words[0].ToLower()) > character.AccessLevel){
+            if (AccessLevel.getLevel(words[0].ToLower()) > character.AccessLevel)
+            {
                 character.SendMessage("Insufficient privileges.");
                 return false;
             }
