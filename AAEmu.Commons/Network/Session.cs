@@ -104,7 +104,10 @@ namespace AAEmu.Commons.Network
             catch (ObjectDisposedException)
             {
                 _packetQueue = null;
-                _sending = false;
+                lock (Socket)
+                {
+                    _sending = false;
+                }
             }
         }
 
@@ -115,6 +118,24 @@ namespace AAEmu.Commons.Network
             {
                 case SocketAsyncOperation.Send:
                     ProcessSend(e);
+                    break;
+                case SocketAsyncOperation.Accept:
+                    break;
+                case SocketAsyncOperation.Connect:
+                    break;
+                case SocketAsyncOperation.Disconnect:
+                    break;
+                case SocketAsyncOperation.None:
+                    break;
+                case SocketAsyncOperation.Receive:
+                    break;
+                case SocketAsyncOperation.ReceiveFrom:
+                    break;
+                case SocketAsyncOperation.ReceiveMessageFrom:
+                    break;
+                case SocketAsyncOperation.SendPackets:
+                    break;
+                case SocketAsyncOperation.SendTo:
                     break;
                 default:
                     throw new ArgumentException("The last operation completed on the socket was not a send");
@@ -150,6 +171,7 @@ namespace AAEmu.Commons.Network
             // throws if client process has already closed
             catch (Exception)
             {
+                // ignored
             }
 
             Socket.Close();

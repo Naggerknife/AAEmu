@@ -31,7 +31,6 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 TaskManager.Instance.Schedule(new Tasks.Skills.SkillUse(comboSkill,
                         caster,
                         casterObj,
-                        target,
                         targetObj,
                         skillObject),
                     TimeSpan.FromMilliseconds(value2));

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
@@ -184,19 +184,19 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
 
         public override void TimeToTimeApply(Unit caster, BaseUnit owner, Effect effect)
         {
-            if (TickEffect != null)
-            {
-                if (TickEffect.TargetBuffTagId > 0 &&
-                    !owner.Effects.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(TickEffect.TargetBuffTagId)))
-                    return;
-                if (TickEffect.TargetNoBuffTagId > 0 &&
-                    owner.Effects.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(TickEffect.TargetNoBuffTagId)))
-                    return;
-                var eff = SkillManager.Instance.GetEffectTemplate(TickEffect.EffectId);
-                var targetObj = new SkillCastUnitTarget(owner.ObjId);
-                var skillObj = new SkillObject(); // TODO ?
-                eff.Apply(caster, effect.SkillCaster, owner, targetObj, new CastBuff(effect), null, skillObj, DateTime.Now);
-            }
+            if (TickEffect == null)
+                return;
+
+            if (TickEffect.TargetBuffTagId > 0 &&
+                !owner.Effects.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(TickEffect.TargetBuffTagId)))
+                return;
+            if (TickEffect.TargetNoBuffTagId > 0 &&
+                owner.Effects.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(TickEffect.TargetNoBuffTagId)))
+                return;
+            var eff = SkillManager.Instance.GetEffectTemplate(TickEffect.EffectId);
+            var targetObj = new SkillCastUnitTarget(owner.ObjId);
+            var skillObj = new SkillObject(); // TODO ?
+            eff?.Apply(caster, effect.SkillCaster, owner, targetObj, new CastBuff(effect), null, skillObj, DateTime.Now);
         }
 
         public override void Dispel(Unit caster, BaseUnit owner, Effect effect)

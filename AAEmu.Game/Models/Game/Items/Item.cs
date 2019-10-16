@@ -4,6 +4,7 @@ using AAEmu.Game.Models.Game.Items.Templates;
 
 namespace AAEmu.Game.Models.Game.Items
 {
+    [Flags]
     public enum ItemFlag
     {
         None = 0x0,

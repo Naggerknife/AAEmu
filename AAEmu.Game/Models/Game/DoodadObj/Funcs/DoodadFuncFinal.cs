@@ -23,7 +23,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
             var delay = Rand.Next(MinTime, MaxTime);
 
-            owner.GrowthTime = DateTime.Now.AddMilliseconds(After); // TODO ... need here?
+            owner.GrowthTime = DateTime.Now.AddMilliseconds(delay); // TODO ... need here?
             owner.FuncTask = new DoodadFuncFinalTask(caster, owner, skillId, Respawn);
             TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(After)); // After ms remove the object from visibility
         }

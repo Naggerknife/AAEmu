@@ -42,7 +42,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(owner), false); // TODO added to work on / off lighting and destruction of barrels / boxes
                 var funcs = DoodadManager.Instance.GetPhaseFunc(owner.FuncGroupId);
                 foreach (var func in funcs)
-                    func.Use(caster, owner, skillId);
+                    func?.Use(caster, owner, skillId);
             }
         }
     }

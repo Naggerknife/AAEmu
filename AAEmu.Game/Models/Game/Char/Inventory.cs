@@ -23,8 +23,8 @@ namespace AAEmu.Game.Models.Game.Char
         private List<ulong> _removedItems;
 
         public readonly Character Owner;
-        public Item[] Equip { get; set; }
-        public Item[] Items { get; set; }
+        public Item[] Equip;
+        public Item[] Items;
         public Item[] Bank { get; set; }
 
         public Inventory(Character owner)
@@ -224,16 +224,27 @@ namespace AAEmu.Game.Models.Game.Char
             if (item == null)
                 return null;
 
-            int count = item.Count;
+            var count = item.Count;
             var tasks = new List<ItemTask>();
 
-            Item[] checkStackable = Items; //Buffer to make sure all items fit before moving if required
-            if (type == SlotType.Bank)
-                checkStackable = Bank;
-            else if (type == SlotType.Mail)
-                return null; //TODO
-            else if (type == SlotType.Trade)
-                return null; //TODO
+            var checkStackable = Items; //Buffer to make sure all items fit before moving if required
+            switch (type)
+            {
+                case SlotType.Bank:
+                    checkStackable = Bank;
+                    break;
+                case SlotType.Mail: //TODO
+                case SlotType.Trade:
+                    return null;    //TODO
+                case SlotType.None:
+                    break;
+                case SlotType.Equipment:
+                    break;
+                case SlotType.Inventory:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
 
             if (item.Template.MaxCount > 1)
             {
@@ -314,20 +325,19 @@ namespace AAEmu.Game.Models.Game.Char
             if (item.Slot == -1 && _freeSlot == -1)
                 return null;
 
-            if (Items[item.Slot] == null)
-            {
-                item.SlotType = SlotType.Inventory;
-                Items[item.Slot] = item;
+            if (Items[item.Slot] != null)
+                return null;
 
-                _freeSlot = CheckFreeSlot(SlotType.Inventory);
+            item.SlotType = SlotType.Inventory;
+            Items[item.Slot] = item;
 
-                if (item.Template.LootQuestId > 0)
-                    Owner.Quests.OnItemGather(item, item.Count);
+            _freeSlot = CheckFreeSlot(SlotType.Inventory);
 
-                return item;
-            }
+            if (item.Template.LootQuestId > 0)
+                Owner.Quests.OnItemGather(item, item.Count);
 
-            return null;
+            return item;
+
         }
 
         public void RemoveItem(Item item, bool release, ItemTaskType taskType)
@@ -336,16 +346,26 @@ namespace AAEmu.Game.Models.Game.Char
                 return;
 
             var tasks = new List<ItemTask>();
-            if (item.SlotType == SlotType.Equipment)
-                Equip[item.Slot] = null;
-
-            else if (item.SlotType == SlotType.Inventory)
-                Items[item.Slot] = null;
-
-            else if (item.SlotType == SlotType.Bank)
-                Bank[item.Slot] = null;
-
-
+            switch (item.SlotType)
+            {
+                case SlotType.Equipment:
+                    Equip[item.Slot] = null;
+                    break;
+                case SlotType.Inventory:
+                    Items[item.Slot] = null;
+                    break;
+                case SlotType.Bank:
+                    Bank[item.Slot] = null;
+                    break;
+                case SlotType.None:
+                    break;
+                case SlotType.Trade:
+                    break;
+                case SlotType.Mail:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             tasks.Add(new ItemRemove(item));
             if (release)
                 ItemIdManager.Instance.ReleaseId((uint)item.Id);
@@ -358,38 +378,107 @@ namespace AAEmu.Game.Models.Game.Char
             //TODO: Call with ItemTaskType
             Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
         }
+        public void RemoveItem(Item item, int count, ItemTaskType taskType)
+        {
+            if (item == null)
+                return;
+
+            var tasks = new List<ItemTask>();
+
+            var itemCount = item.Count;
+            var temp = Math.Min(count, itemCount);
+            item.Count -= temp;
+            count -= temp;
+            if (count < 0)
+                count = 0;
+
+            if (item.Count == 0)
+            {
+                Items[item.Slot] = null;
+                ItemIdManager.Instance.ReleaseId((uint)item.Id);
+                lock (_removedItems)
+                {
+                    if (!_removedItems.Contains(item.Id))
+                        _removedItems.Add(item.Id);
+                }
+                tasks.Add(new ItemRemove(item));
+            }
+            else
+                tasks.Add(new ItemCountUpdate(item, -temp));
+
+            if (count > 0)
+                RemoveItem(item.TemplateId, count, taskType, tasks);
+            else
+                Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
+        }
+
+        public void RemoveItem(uint templateId, int count, ItemTaskType taskType, List<ItemTask> tasks = null)
+        {
+            if (tasks == null)
+                tasks = new List<ItemTask>();
+
+            foreach (var item in Items)
+            {
+                if (item == null || item.TemplateId != templateId)
+                    continue;
+
+                var itemCount = item.Count;
+                var temp = Math.Min(count, itemCount);
+                item.Count -= temp;
+                count -= temp;
+                if (count < 0)
+                    count = 0;
+                if (item.Count == 0)
+                {
+                    Items[item.Slot] = null;
+                    ItemIdManager.Instance.ReleaseId((uint)item.Id);
+                    lock (_removedItems)
+                    {
+                        if (!_removedItems.Contains(item.Id))
+                            _removedItems.Add(item.Id);
+                    }
+                    tasks.Add(new ItemRemove(item));
+                }
+                else
+                    tasks.Add(new ItemCountUpdate(item, -temp));
+
+                if (count == 0)
+                    break;
+            }
+            Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
+        }
 
         public void RemoveItem(uint templateId, int count, ItemTaskType taskType)
         {
             var tasks = new List<ItemTask>();
             foreach (var item in Items)
             {
-                if (item != null && item.TemplateId == templateId)
+                if (item == null || item.TemplateId != templateId)
+                    continue;
+
+                var itemCount = item.Count;
+                var temp = Math.Min(count, itemCount);
+                item.Count -= temp;
+                count -= temp;
+                if (count < 0)
+                    count = 0;
+                if (item.Count == 0)
                 {
-                    var itemCount = item.Count;
-                    var temp = Math.Min(count, itemCount);
-                    item.Count -= temp;
-                    count -= temp;
-                    if (count < 0)
-                        count = 0;
-                    if (item.Count == 0)
+                    Items[item.Slot] = null;
+                    ItemIdManager.Instance.ReleaseId((uint)item.Id);
+                    lock (_removedItems)
                     {
-                        Items[item.Slot] = null;
-                        ItemIdManager.Instance.ReleaseId((uint)item.Id);
-                        lock (_removedItems)
-                        {
-                            if (!_removedItems.Contains(item.Id))
-                                _removedItems.Add(item.Id);
-                        }
-                        tasks.Add(new ItemRemove(item));
+                        if (!_removedItems.Contains(item.Id))
+                            _removedItems.Add(item.Id);
                     }
-                    else
-                    {
-                        tasks.Add(new ItemCountUpdate(item, -temp));
-                    }
-                    if (count == 0)
-                        break;
+                    tasks.Add(new ItemRemove(item));
                 }
+                else
+                {
+                    tasks.Add(new ItemCountUpdate(item, -temp));
+                }
+                if (count == 0)
+                    break;
             }
             Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
             return;
@@ -397,20 +486,33 @@ namespace AAEmu.Game.Models.Game.Char
         
         public void RemoveItem(Item item, bool release)
         {
-            if (item.SlotType == SlotType.Equipment)
-                Equip[item.Slot] = null;
-
-            else if (item.SlotType == SlotType.Inventory)
+            switch (item.SlotType)
             {
-                Items[item.Slot] = null;
-                if (_freeSlot == -1 || item.Slot < _freeSlot)
-                    _freeSlot = item.Slot;
-            }
-            else if (item.SlotType == SlotType.Bank)
-            {
-                Bank[item.Slot] = null;
-                if (_freeBankSlot == -1 || item.Slot < _freeBankSlot)
-                    _freeBankSlot = item.Slot;
+                case SlotType.Equipment:
+                    Equip[item.Slot] = null;
+                    break;
+                case SlotType.Inventory:
+                {
+                    Items[item.Slot] = null;
+                    if (_freeSlot == -1 || item.Slot < _freeSlot)
+                        _freeSlot = item.Slot;
+                    break;
+                }
+                case SlotType.Bank:
+                {
+                    Bank[item.Slot] = null;
+                    if (_freeBankSlot == -1 || item.Slot < _freeBankSlot)
+                        _freeBankSlot = item.Slot;
+                    break;
+                }
+                case SlotType.None:
+                    break;
+                case SlotType.Trade:
+                    break;
+                case SlotType.Mail:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             if (release)

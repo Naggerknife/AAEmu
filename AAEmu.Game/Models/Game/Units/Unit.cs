@@ -141,9 +141,8 @@ namespace AAEmu.Game.Models.Game.Units
         public virtual void DoDie(Unit killer)
         {
             if (killer.CurrentTarget == null)
-            {
                 return;
-            }
+
             Effects.RemoveEffectsOnDeath();
             killer.BroadcastPacket(new SCUnitDeathPacket(killer.ObjId, 1, killer), true);
 
@@ -151,30 +150,27 @@ namespace AAEmu.Game.Models.Game.Units
             if (lootDropItems.Count > 0)
                 killer.BroadcastPacket(new SCLootableStatePacket(killer.ObjId, true), true);
 
-            if (killer.CurrentTarget != null)
+            killer.BroadcastPacket(new SCAiAggroPacket(killer.ObjId, 0), true);
+            killer.SummarizeDamage = 0;
+
+            killer.BroadcastPacket(new SCCombatClearedPacket(killer.CurrentTarget.ObjId), true);
+            killer.BroadcastPacket(new SCCombatClearedPacket(killer.ObjId), true);
+            killer.StartRegen();
+            killer.BroadcastPacket(new SCTargetChangedPacket(killer.ObjId, 0), true);
+
+            if (killer is Character character)
             {
-                killer.BroadcastPacket(new SCAiAggroPacket(killer.ObjId, 0), true);
-                killer.SummarizeDamage = 0;
-
-                killer.BroadcastPacket(new SCCombatClearedPacket(killer.CurrentTarget.ObjId), true);
-                killer.BroadcastPacket(new SCCombatClearedPacket(killer.ObjId), true);
-                killer.StartRegen();
-                killer.BroadcastPacket(new SCTargetChangedPacket(killer.ObjId, 0), true);
-
-                if (killer is Character character)
-                {
-                    character.StopAutoSkill(character);
-                    character.IsInBattle = false; // we need the character to be "not in battle"
-                }
-                else if (killer.CurrentTarget is Character character2)
-                {
-                    character2.StopAutoSkill(character2);
-                    character2.IsInBattle = false; // we need the character to be "not in battle"
-                    character2.DeadTime = DateTime.Now;
-                }
-
-                killer.CurrentTarget = null;
+                character.StopAutoSkill(character);
+                character.IsInBattle = false; // we need the character to be "not in battle"
             }
+            else if (killer.CurrentTarget is Character character2)
+            {
+                character2.StopAutoSkill(character2);
+                character2.IsInBattle = false; // we need the character to be "not in battle"
+                character2.DeadTime = DateTime.Now;
+            }
+
+            killer.CurrentTarget = null;
         }
 
         private async void StopAutoSkill(Unit character)
@@ -192,7 +188,7 @@ namespace AAEmu.Game.Models.Game.Units
 
         public void StartRegen()
         {
-            if (_regenTask != null || Hp >= MaxHp && Mp >= MaxMp || Hp <= 0)
+            if (_regenTask != null || (Hp >= MaxHp && Mp >= MaxMp) || Hp <= 0)
                 return;
 
             _regenTask = new UnitPointsRegenTask(this);

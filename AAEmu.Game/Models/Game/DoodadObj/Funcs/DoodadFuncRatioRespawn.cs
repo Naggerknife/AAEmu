@@ -34,19 +34,16 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                 //doodad.Spawn(0);
 
                 // NPC spawn
-                var npcSpawner = new NpcSpawner();
-                npcSpawner.Id = 0;
+                var npcSpawner = new NpcSpawner
+                {
+                    Id = 0, RespawnTime = 0, 
+                    UnitId = 7503, 
+                    Position = character.Position.Clone()
+                };
 
-                npcSpawner.RespawnTime = 0; // not appear after death
-                //npcSpawner.UnitId = 1087; // mouse Id = 1087 FactionId = 1
-                //npcSpawner.UnitId = 7027; // Rat Id = 7027, FactionId = 3
-                npcSpawner.UnitId = 7503; // Rat Id = 7503, FactionId = 3
-                npcSpawner.Position = character.Position.Clone();
-                npcSpawner.Position.X = newX + Rand.Next(-2, 2);
                 npcSpawner.Position.Y = newY + Rand.Next(-2, 2);
                 npcSpawner.Position.Z = AppConfiguration.Instance.HeightMapsEnable
-                    ? WorldManager.Instance.GetHeight(npcSpawner.Position.ZoneId, npcSpawner.Position.X,
-                        npcSpawner.Position.Y)
+                    ? WorldManager.Instance.GetHeight(npcSpawner.Position.ZoneId, npcSpawner.Position.X, npcSpawner.Position.Y)
                     : npcSpawner.Position.Z;
                 // looks in the direction of the character
                 var angle = MathUtil.CalculateAngleFrom(npcSpawner.Position.X, npcSpawner.Position.Y, character.Position.X, character.Position.Y);

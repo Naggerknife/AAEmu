@@ -209,6 +209,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
             using (var connection = SQLite.CreateConnection())
             {
+                if (connection == null)
+                    return;
+
                 _log.Info("Loading npc templates...");
                 using (var command = connection.CreateCommand())
                 {
@@ -601,8 +604,11 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             if (templateId > 0)
             {
                 item = ItemManager.Instance.Create(templateId, 1, grade, false);
-                item.SlotType = SlotType.Equipment;
-                item.Slot = (int)slot;
+                if (item != null)
+                {
+                    item.SlotType = SlotType.Equipment;
+                    item.Slot = (int)slot;
+                }
             }
 
             npc.Equip[(int)slot] = item;

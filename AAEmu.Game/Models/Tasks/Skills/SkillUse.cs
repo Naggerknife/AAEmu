@@ -11,7 +11,7 @@ namespace AAEmu.Game.Models.Tasks.Skills
         private readonly SkillCastTarget _targetCaster;
         private readonly SkillObject _skillObject;
 
-        public SkillUse(Skill skill, Unit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject)
+        public SkillUse(Skill skill, Unit caster, SkillCaster casterCaster, SkillCastTarget targetCaster, SkillObject skillObject)
         {
             _skill = skill;
             _caster = caster;

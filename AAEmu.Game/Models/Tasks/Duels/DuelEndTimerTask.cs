@@ -22,11 +22,8 @@ namespace AAEmu.Game.Models.Tasks.Duels
             if (_duel.DuelEndTimerTask == null)
                 return;
 
-            if (_duel.DuelEndTimerTask != null)
-            {
-                await _duel.DuelEndTimerTask.Cancel();
-                _duel.DuelEndTimerTask = null;
-            }
+            await _duel.DuelEndTimerTask.Cancel();
+            _duel.DuelEndTimerTask = null;
             DuelManager.Instance.DuelStop(_challengerId, _det);
         }
     }

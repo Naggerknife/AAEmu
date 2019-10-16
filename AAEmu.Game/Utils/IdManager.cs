@@ -34,7 +34,7 @@ namespace AAEmu.Game.Utils
             _objTables = objTables;
             _exclude = exclude;
             _distinct = distinct;
-            _freeIdSize = (int) (_lastId - _firstId);
+            _freeIdSize = (int)(_lastId - _firstId);
             PrimeFinder.Init();
         }
 
@@ -50,7 +50,7 @@ namespace AAEmu.Game.Utils
                 {
                     if (_exclude.Contains(usedObjectId))
                         continue;
-                    var objectId = (int) (usedObjectId - _firstId);
+                    var objectId = (int)(usedObjectId - _firstId);
                     if (usedObjectId < _firstId)
                     {
                         _log.Warn("{0}: Object ID {1} in DB is less than {2}", _name, usedObjectId, _firstId);
@@ -79,10 +79,13 @@ namespace AAEmu.Game.Utils
         private IEnumerable<uint> ExtractUsedObjectIdTable()
         {
             if (_objTables.Length < 2)
-                return new uint[0];
+                return Array.Empty<uint>();
 
             using (var connection = MySQL.CreateConnection())
             {
+                if (connection == null)
+                    return Array.Empty<uint>();
+
                 using (var command = connection.CreateCommand())
                 {
                     var query = "SELECT " + (_distinct ? "DISTINCT " : "") + _objTables[0, 1] + ", 0 AS i FROM " +
@@ -131,7 +134,7 @@ namespace AAEmu.Game.Utils
 
         public void ReleaseId(uint usedObjectId)
         {
-            var objectId = (int) (usedObjectId - _firstId);
+            var objectId = (int)(usedObjectId - _firstId);
             if (objectId > -1)
             {
                 _freeIds.Clear(objectId);
@@ -172,7 +175,7 @@ namespace AAEmu.Game.Utils
                 }
 
                 _nextFreeId = nextFree;
-                return (uint) newId + _firstId;
+                return (uint)newId + _firstId;
             }
         }
 

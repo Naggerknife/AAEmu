@@ -619,11 +619,13 @@ namespace AAEmu.Game.Models.Game.Skills
                 return false;
             }
 
-            var step = new PlotStep();
-            step.Event = nextEvent.Event;
-            step.Flag = 2;
-            step.Casting = nextEvent.Casting;
-            step.Channeling = nextEvent.Channeling;
+            var step = new PlotStep
+            {
+                Event = nextEvent.Event, 
+                Flag = 2, 
+                Casting = nextEvent.Casting, 
+                Channeling = nextEvent.Channeling
+            };
             foreach (var condition in nextEvent.Event.Conditions)
             {
                 if (condition.Condition.Check(caster, casterType, target, targetType, skillObject))
@@ -655,7 +657,7 @@ namespace AAEmu.Game.Models.Game.Skills
                     if (template is BuffEffect)
                         step.Flag = 6;
                     
-                    template.Apply(caster, casterType, target, targetType, new CastPlot(step.Event.PlotId, TlId, step.Event.Id, Template.Id), this, skillObject, DateTime.Now);
+                    template?.Apply(caster, casterType, target, targetType, new CastPlot(step.Event.PlotId, TlId, step.Event.Id, Template.Id), this, skillObject, DateTime.Now);
                 }
             }
 
@@ -728,7 +730,7 @@ namespace AAEmu.Game.Models.Game.Skills
                 if (Template.ChannelingBuffId != 0)
                 {
                     var buff = SkillManager.Instance.GetBuffTemplate(Template.ChannelingBuffId);
-                    buff.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, TlId), this, skillObject, DateTime.Now);
+                    buff?.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, TlId), this, skillObject, DateTime.Now);
                 }
 
                 caster.SkillTask = new ChannelingTask(this, caster, casterType, target, targetType, skillObject);
@@ -754,6 +756,9 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public void Channeling(Unit caster, SkillCaster casterType, BaseUnit target, SkillCastTarget targetType, SkillObject skillObject)
         {
+            if (caster == null)
+                return;
+
             caster.SkillTask = null;
             if (Template.ChannelingBuffId != 0)
                 caster.Effects.RemoveEffect(Template.ChannelingBuffId, Template.Id);
@@ -761,7 +766,7 @@ namespace AAEmu.Game.Models.Game.Skills
             if (Template.ToggleBuffId != 0)
             {
                 var buff = SkillManager.Instance.GetBuffTemplate(Template.ToggleBuffId);
-                buff.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, TlId), this, skillObject, DateTime.Now);
+                buff?.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, TlId), this, skillObject, DateTime.Now);
             }
 
             if (Template.EffectDelay > 0)
@@ -787,7 +792,7 @@ namespace AAEmu.Game.Models.Game.Skills
 
             foreach (var effect in Template.Effects)
             {
-                _log.Warn(effect.Template.ToString());
+                _log.Warn(effect.Template?.ToString());
                 //var targets = GetTargets(caster, targetType, Template.TargetType, (SkillEffectTypes)effect.ApplicationMethodId);
                 foreach (var target in targets)
                 {
@@ -874,7 +879,7 @@ namespace AAEmu.Game.Models.Game.Skills
                         }
                     }
 
-                    effect.Template?.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, TlId), this, skillObject, DateTime.Now);
+                    effect?.Template?.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, TlId), this, skillObject, DateTime.Now);
                 }
             }
 
@@ -908,79 +913,6 @@ namespace AAEmu.Game.Models.Game.Skills
 
             TlIdManager.Instance.ReleaseId(TlId);
             TlId = 0;
-        }
-
-        public List<BaseUnit> GetTargets(Unit caster, SkillCastTarget castTarget, SkillTargetType targetType, SkillEffectTypes effectApplicationMethod)
-        {
-            var targets = new List<BaseUnit>();
-            var origin = (BaseUnit)caster;
-            switch (Template.TargetSelection)
-            {
-                case SkillTargetSelectionType.Source:
-                    origin = caster;
-                    break;
-                case SkillTargetSelectionType.Target:
-                    if (castTarget is SkillCastUnitTarget unitTarget)
-                        origin = WorldManager.Instance.GetBaseUnit(unitTarget.ObjId);
-                    else if (castTarget is SkillCastPositionTarget posTarget)
-                    {
-                        origin = new BaseUnit
-                        {
-                            Position = new Point(posTarget.PosX, posTarget.PosY, posTarget.PosZ)
-                            {
-                                ZoneId = caster.Position.ZoneId,
-                                WorldId = caster.Position.WorldId
-                            },
-                            Region = caster.Region,
-                            Faction = caster.Faction
-                        };
-                    }
-                    else if (castTarget is SkillCastDoodadTarget doodadTarget)
-                    {
-                        origin = WorldManager.Instance.GetDoodad(doodadTarget.ObjId);
-                    }
-                    else
-                        origin = caster.CurrentTarget;
-                    break;
-                case SkillTargetSelectionType.Location:
-                    var positionTarget = (SkillCastPositionTarget)castTarget;
-                    origin = new BaseUnit
-                    {
-                        Position = new Point(positionTarget.PosX, positionTarget.PosY, positionTarget.PosZ)
-                        {
-                            ZoneId = caster.Position.ZoneId,
-                            WorldId = caster.Position.WorldId
-                        },
-                        Region = caster.Region,
-                        Faction = caster.Faction
-                    };
-                    break;
-                case SkillTargetSelectionType.Line:
-                    break;
-            }
-
-            switch (effectApplicationMethod)
-            {
-                case SkillEffectTypes.SourceToSource:
-                    targets.Add(caster);
-                    break;
-                case SkillEffectTypes.SourceToPos:
-                case SkillEffectTypes.SourceToTarget:
-                    if (Template.TargetAreaRadius > 0)
-                    {
-                        var obj = WorldManager.Instance.GetAround<BaseUnit>(origin, Template.TargetAreaRadius, Template.TargetAreaCount);
-                        obj = obj.Where(other => caster.GetRelationTo(other) == Template.TargetRelation).ToList();
-                        targets.AddRange(obj);
-                    }
-                    else
-                        targets.Add(origin);
-
-                    break;
-                case SkillEffectTypes.SourceToSourceOnce:
-                    targets.Add(caster);
-                    break;
-            }
-            return targets;
         }
     }
 }

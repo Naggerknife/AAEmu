@@ -28,7 +28,7 @@ namespace AAEmu.Game.Models.Tasks.UnitMove
         {
             if (_npc.Hp > 0)
             {
-                _patrol.Apply(_npc);
+                _patrol?.Apply(_npc);
             }
         }
     }

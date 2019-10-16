@@ -31,7 +31,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
         public void Apply()
         {
-            _effect.Apply(_caster, _skillCaster, _target, _targetCaster, _castSkill, _skill, _skillObject, DateTime.Now);
+            _effect?.Apply(_caster, _skillCaster, _target, _targetCaster, _castSkill, _skill, _skillObject, DateTime.Now);
         }
     }
 }

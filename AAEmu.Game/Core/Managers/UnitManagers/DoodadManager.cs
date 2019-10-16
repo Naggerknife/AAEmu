@@ -43,6 +43,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
             using (var connection = SQLite.CreateConnection())
             {
+                if (connection == null)
+                    return;
+
                 _log.Info("Loading doodad templates...");
                 using (var command = connection.CreateCommand())
                 {

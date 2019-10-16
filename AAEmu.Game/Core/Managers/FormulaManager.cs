@@ -54,7 +54,8 @@ namespace AAEmu.Game.Core.Managers
             CalculationEngine.AddFunction("clamp", (a, b, c) => a < b ? b : (a > c ? c : a));
             CalculationEngine.AddFunction("if_negative", (a, b, c) => a < 0 ? b : c);
             CalculationEngine.AddFunction("if_positive", (a, b, c) => a > 0 ? b : c);
-            CalculationEngine.AddFunction("if_zero", (a, b, c) => a == 0 ? b : c);
+            const double tolerance = 0;
+            CalculationEngine.AddFunction("if_zero", (a, b, c) => Math.Abs(a) < tolerance ? b : c);
 
             _unitFormulas = new Dictionary<UnitOwnerType, Dictionary<UnitFormulaKind, UnitFormula>>();
             foreach (var owner in Enum.GetValues(typeof(UnitOwnerType)))

@@ -30,7 +30,8 @@ namespace AAEmu.Game.Models.Game.Units.Route
 
             if (Math.Abs(x) > distance)
             {
-                if (MaxXYZ != Math.Abs(x))
+                const float tolerance = 0;
+                if (Math.Abs(MaxXYZ - Math.Abs(x)) > tolerance)
                 {
                     tempMovingDistance = Math.Abs(x) / (MaxXYZ / MovingDistance);
                     tempMovingDistance = Math.Min(tempMovingDistance, MovingDistance);
@@ -56,7 +57,8 @@ namespace AAEmu.Game.Models.Game.Units.Route
             }
             if (Math.Abs(y) > distance)
             {
-                if (MaxXYZ != Math.Abs(y))
+                const float tolerance = 0;
+                if (Math.Abs(MaxXYZ - Math.Abs(y)) > tolerance)
                 {
                     tempMovingDistance = Math.Abs(y) / (MaxXYZ / MovingDistance);
                     tempMovingDistance = Math.Min(tempMovingDistance, MovingDistance);
@@ -81,7 +83,8 @@ namespace AAEmu.Game.Models.Game.Units.Route
             }
             if (Math.Abs(z) > distance)
             {
-                if (MaxXYZ != Math.Abs(z))
+                const float tolerance = 0;
+                if (Math.Abs(MaxXYZ - Math.Abs(z)) > tolerance)
                 {
                     tempMovingDistance = Math.Abs(z) / (MaxXYZ / MovingDistance);
                     tempMovingDistance = Math.Min(tempMovingDistance, MovingDistance);
