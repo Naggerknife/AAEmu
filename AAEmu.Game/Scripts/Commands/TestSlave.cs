@@ -14,6 +14,16 @@ namespace AAEmu.Game.Scripts.Commands
             CommandManager.Instance.Register("test_slave", this);
         }
 
+        public string GetCommandLineHelp()
+        {
+            return "";
+        }
+
+        public string GetCommandHelpText()
+        {
+            return "";
+        }
+
         public void Execute(Character character, string[] args)
         {
             var slave = new Slave();
@@ -28,7 +38,7 @@ namespace AAEmu.Game.Scripts.Commands
             slave.Position.Y += 5f; // spawn_Y_offset
             slave.MaxHp = slave.Hp = 5000;
             slave.ModelParams = new UnitCustomModelParams();
-            
+
             slave.Spawn();
         }
     }

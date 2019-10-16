@@ -8,26 +8,29 @@ using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Scripts.Commands
 {
-    public class TestMount : ICommand
+    public class TestEcho : ICommand
     {
         public void OnLoad()
         {
-            CommandManager.Instance.Register("test_mount", this);
+            CommandManager.Instance.Register("echo", this);
         }
 
         public string GetCommandLineHelp()
         {
-            return "";
+            return "<text>";
         }
 
         public string GetCommandHelpText()
         {
-            return "";
+            return "Repeats the provided arguments in chat";
         }
 
         public void Execute(Character character, string[] args)
         {
-
+            string s = string.Empty;
+            foreach (string a in args)
+                s += a + " ";
+            character.SendMessage("|cFFFFFFFF[Echo] |r" + s);
         }
     }
 }

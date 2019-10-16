@@ -5,10 +5,13 @@ using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.DoodadObj;
+using AAEmu.Game.Models.Game.Expeditions;
+using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
@@ -46,7 +49,10 @@ namespace AAEmu.Game.Models.Game.Char
         private static Logger _log = LogManager.GetCurrentClassLogger();
 
         private Dictionary<ushort, string> _options;
+
+        //public GameConnection Connection { get; set; }
         public List<IDisposable> Subscribers { get; set; }
+
         public uint Id { get; set; }
         public uint AccountId { get; set; }
         public Race Race { get; set; }
@@ -82,16 +88,21 @@ namespace AAEmu.Game.Models.Game.Char
         public int Expirience { get; set; }
         public int RecoverableExp { get; set; }
         public DateTime Updated { get; set; }
+
         public uint ReturnDictrictId { get; set; }
         public uint ResurrectionDictrictId { get; set; }
+
         public override UnitCustomModelParams ModelParams { get; set; }
         public override float Scale => 1f;
         public override byte RaceGender => (byte)(16 * (byte)Gender + (byte)Race);
+
         public CharacterVisualOptions VisualOptions { get; set; }
+
         public ActionSlot[] Slots { get; set; }
         public Inventory Inventory { get; set; }
         public byte NumInventorySlots { get; set; }
         public short NumBankSlots { get; set; }
+
         public Item[] BuyBack { get; set; }
         public BondDoodad Bonding { get; set; }
         public CharacterQuests Quests { get; set; }
@@ -102,11 +113,17 @@ namespace AAEmu.Game.Models.Game.Char
         public CharacterFriends Friends { get; set; }
         public CharacterBlocked Blocked { get; set; }
         public CharacterMates Mates { get; set; }
+
         public byte ExpandedExpert { get; set; }
         public CharacterActability Actability { get; set; }
+
         public CharacterSkills Skills { get; set; }
         public CharacterCraft Craft { get; set; }
-        public int AccessLevel { get; set; }
+
+        public int AccessLevel { get; set;}
+        public Point LocalPingPosition { get; set; } // added as a GM command helper
+        public Item Item { get; set; }  // Item который используется персонажем в каких либо действиях
+
         private bool _inParty;
         private bool _isOnline;
 
@@ -130,7 +147,7 @@ namespace AAEmu.Game.Models.Game.Char
                 if (_isOnline == value) return;
                 // TODO - GUILD STATUS CHANGE
                 FriendMananger.Instance.SendStatusChange(this, true, value);
-                if (!value) TeamManager.Instance.SetOffline(this);
+                if(!value) TeamManager.Instance.SetOffline(this);
                 _isOnline = value;
             }
         }
@@ -142,7 +159,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Str);
-                var parameters = new Dictionary<string, double> { ["level"] = Level };
+                var parameters = new Dictionary<string, double> {["level"] = Level};
                 var result = formula.Evaluate(parameters);
                 var res = (int)result;
                 foreach (var item in Inventory.Equip)
@@ -165,7 +182,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Dex);
-                var parameters = new Dictionary<string, double> { ["level"] = Level };
+                var parameters = new Dictionary<string, double> {["level"] = Level};
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var item in Inventory.Equip)
                     if (item is EquipItem equip)
@@ -187,7 +204,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Sta);
-                var parameters = new Dictionary<string, double> { ["level"] = Level };
+                var parameters = new Dictionary<string, double> {["level"] = Level};
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var item in Inventory.Equip)
                     if (item is EquipItem equip)
@@ -209,7 +226,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Int);
-                var parameters = new Dictionary<string, double> { ["level"] = Level };
+                var parameters = new Dictionary<string, double> {["level"] = Level};
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var item in Inventory.Equip)
                     if (item is EquipItem equip)
@@ -231,7 +248,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Spi);
-                var parameters = new Dictionary<string, double> { ["level"] = Level };
+                var parameters = new Dictionary<string, double> {["level"] = Level};
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var item in Inventory.Equip)
                     if (item is EquipItem equip)
@@ -253,7 +270,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Fai);
-                var parameters = new Dictionary<string, double> { ["level"] = Level };
+                var parameters = new Dictionary<string, double> {["level"] = Level};
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var bonus in GetBonuses(UnitAttribute.Fai))
                 {
@@ -877,7 +894,7 @@ namespace AAEmu.Game.Models.Game.Char
             using (var command = connection.CreateCommand())
             {
                 command.Connection = connection;
-                command.CommandText = "SELECT * FROM characters WHERE `id` = @id AND `account_id` = @account_id";
+                command.CommandText = "SELECT * FROM characters WHERE `id` = @id AND `account_id` = @account_id and `deleted`=0";
                 command.Parameters.AddWithValue("@id", characterId);
                 command.Parameters.AddWithValue("@account_id", accountId);
                 using (var reader = command.ExecuteReader())
@@ -983,7 +1000,7 @@ namespace AAEmu.Game.Models.Game.Char
             using (var command = connection.CreateCommand())
             {
                 command.Connection = connection;
-                command.CommandText = "SELECT * FROM characters WHERE `id` = @id";
+                command.CommandText = "SELECT * FROM characters WHERE `id` = @id and `deleted`=0";
                 command.Parameters.AddWithValue("@id", characterId);
                 using (var reader = command.ExecuteReader())
                 {
@@ -1076,6 +1093,7 @@ namespace AAEmu.Game.Models.Game.Char
                 Slots[i] = new ActionSlot();
 
             Craft = new CharacterCraft(this);
+            LocalPingPosition = new Point();
 
             using (var connection = MySQL.CreateConnection())
             {
@@ -1099,7 +1117,7 @@ namespace AAEmu.Game.Models.Game.Char
                 Mates = new CharacterMates(this);
                 Mates.Load(connection);
 
-
+                
 
                 using (var command = connection.CreateCommand())
                 {
@@ -1295,7 +1313,7 @@ namespace AAEmu.Game.Models.Game.Char
                 character.SendPacket(new SCTargetChangedPacket(character.ObjId, 0));
             }
 
-            character.SendPacket(new SCUnitsRemovedPacket(new[] { ObjId }));
+            character.SendPacket(new SCUnitsRemovedPacket(new[] {ObjId}));
         }
 
         public PacketStream Write(PacketStream stream)

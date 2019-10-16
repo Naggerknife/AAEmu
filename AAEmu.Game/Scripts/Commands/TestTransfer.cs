@@ -1,4 +1,4 @@
-using AAEmu.Game.Core.Managers;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
@@ -11,6 +11,16 @@ namespace AAEmu.Game.Scripts.Commands
         public void OnLoad()
         {
             CommandManager.Instance.Register("test_transter", this);
+        }
+
+        public string GetCommandLineHelp()
+        {
+            return "";
+        }
+
+        public string GetCommandHelpText()
+        {
+            return "";
         }
 
         public void Execute(Character character, string[] args)
@@ -26,7 +36,7 @@ namespace AAEmu.Game.Scripts.Commands
             transfer.Position.Y += 5f; // spawn_Y_offset
             transfer.MaxHp = transfer.Hp = 5000;
             transfer.ModelParams = new UnitCustomModelParams();
-            
+
             transfer.Spawn();
         }
     }

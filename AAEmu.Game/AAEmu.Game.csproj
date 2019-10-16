@@ -59,4 +59,13 @@
       <Folder Include="Models\Tasks\LaborPower\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Scripts\Commands\SoloParty.cs">
+        <LinkBase>$([MSBuild]::EnsureTrailingSlash(%(LinkBase)))</LinkBase>
+      </None>
+      <None Update="Scripts\Commands\TestEcho.cs.cs">
+        <LinkBase>$([MSBuild]::EnsureTrailingSlash(%(LinkBase)))</LinkBase>
+      </None>
+    </ItemGroup>
+
 </Project>
