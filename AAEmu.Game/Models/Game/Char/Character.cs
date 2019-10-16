@@ -894,7 +894,7 @@ namespace AAEmu.Game.Models.Game.Char
             using (var command = connection.CreateCommand())
             {
                 command.Connection = connection;
-                command.CommandText = "SELECT * FROM characters WHERE `id` = @id AND `account_id` = @account_id";
+                command.CommandText = "SELECT * FROM characters WHERE `id` = @id AND `account_id` = @account_id and `deleted`=0";
                 command.Parameters.AddWithValue("@id", characterId);
                 command.Parameters.AddWithValue("@account_id", accountId);
                 using (var reader = command.ExecuteReader())
@@ -1000,7 +1000,7 @@ namespace AAEmu.Game.Models.Game.Char
             using (var command = connection.CreateCommand())
             {
                 command.Connection = connection;
-                command.CommandText = "SELECT * FROM characters WHERE `id` = @id";
+                command.CommandText = "SELECT * FROM characters WHERE `id` = @id and `deleted`=0";
                 command.Parameters.AddWithValue("@id", characterId);
                 using (var reader = command.ExecuteReader())
                 {
