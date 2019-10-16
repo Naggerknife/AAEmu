@@ -186,6 +186,10 @@ namespace AAEmu.Game.Core.Managers
                                 Mountable = reader.GetBoolean("mountable"),
                                 SpawnXOffset = reader.GetFloat("spawn_x_offset"),
                                 SpawnYOffset = reader.GetFloat("spawn_y_offset"),
+                                PortalSpawnFxId = reader.GetUInt32("portal_spawn_fx_id"),
+                                PortalScale = reader.GetFloat("portal_scale"),
+                                PortalTime = reader.GetFloat("portal_time"),
+                                PortalDespawnFxId = reader.GetUInt32("portal_despawn_fx_id"),
                                 FactionId = reader.GetUInt32("faction_id", 0),
                                 Level = reader.GetUInt32("level"),
                                 Cost = reader.GetInt32("cost"),
@@ -196,6 +200,31 @@ namespace AAEmu.Game.Core.Managers
                                 Customizable = reader.GetBoolean("customizable", false)
                             };
                             _slaveTemplates.Add(template.Id, template);
+                        }
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM slave_bindings";
+                    command.Prepare();
+
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new SlaveBindings
+                            {
+                                Id = reader.GetUInt32("id"),
+                                OwnerId = reader.GetInt32("owner_id"),
+                                BuffId = reader.GetString("owner_type"),
+                                SlaveId = reader.GetUInt32("slave_id"),
+                                AttachPointId = reader.GetUInt32("attach_point_id")
+                            };
+                            if (_slaveTemplates.ContainsKey(template.SlaveId))
+                            {
+                                _slaveTemplates[template.SlaveId].SlaveBindings.Add(template);
+                            }
                         }
                     }
                 }
@@ -273,8 +302,32 @@ namespace AAEmu.Game.Core.Managers
                         }
                     }
                 }
-            }
 
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM slave_mount_skills";
+                    command.Prepare();
+
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new SlaveMountSkills
+                            {
+                                Id = reader.GetUInt32("id"),
+                                SlaveId = reader.GetUInt32("slave_id"),
+                                MountSkillId = reader.GetUInt32("mount_skill_id"),
+                            };
+                            if (_slaveTemplates.ContainsKey(template.SlaveId))
+                            {
+                                _slaveTemplates[template.SlaveId].MountSkillId.Add(template);
+                            }
+                        }
+                    }
+                }
+
+
+            }
             #endregion
         }
     }
