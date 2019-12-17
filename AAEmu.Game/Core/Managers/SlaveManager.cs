@@ -197,7 +197,7 @@ namespace AAEmu.Game.Core.Managers
                                 Level = reader.GetUInt32("level"),
                                 Cost = reader.GetInt32("cost"),
                                 SlaveKindId = reader.GetUInt32("slave_kind_id"),
-                                SpawnValidAreaRance = reader.GetUInt32("spawn_valid_area_range", 0),
+                                SpawnValidAreaRange = reader.GetUInt32("spawn_valid_area_range", 0),
                                 //SlaveInitialItemPackId = reader.GetUInt32("slave_initial_item_pack_id", 0),
                                 SlaveInitialItemPackId = reader.IsDBNull("slave_initial_item_pack_id") ? 0 : reader.GetUInt32("slave_initial_item_pack_id"),
                                 //SlaveCustomizingId = reader.GetUInt32("slave_customizing_id", 0),
