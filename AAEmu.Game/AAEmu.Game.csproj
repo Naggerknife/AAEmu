@@ -60,6 +60,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Update="Scripts\Commands\Announce.cs">
+        <LinkBase>$([MSBuild]::EnsureTrailingSlash(%(LinkBase)))</LinkBase>
+      </None>
       <None Update="Scripts\Commands\SoloParty.cs">
         <LinkBase>$([MSBuild]::EnsureTrailingSlash(%(LinkBase)))</LinkBase>
       </None>
