@@ -1,4 +1,5 @@
-﻿using AAEmu.Commons.Utils;
+﻿using System;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Utils;
@@ -76,6 +77,10 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
                     var level = caster.Level;
                     res = level >= Param2 && level <= Param3;
                     break;
+                case PlotConditionType.Unk4:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             _log.Debug("PlotCondition : {0} | Params : {1}, {2}, {3} | Result : {4}", Kind, Param1, Param2, Param3, NotCondition ? !res : res);

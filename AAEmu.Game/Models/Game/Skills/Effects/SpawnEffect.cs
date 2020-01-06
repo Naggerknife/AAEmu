@@ -16,9 +16,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
         public bool UseSummonerFaction { get; set; }
         public float LifeTime { get; set; }
         public bool DespawnOnCreatorDeath { get; set; }
-
         public bool UseSummoneerAggroTarget { get; set; }
-        // TODO 1.2 // public uint MateStateId { get; set; }
+        public uint MateStateId { get; set; }
 
         public override bool OnActionTime => false;
 

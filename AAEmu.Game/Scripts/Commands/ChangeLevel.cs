@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
@@ -39,16 +39,16 @@ namespace AAEmu.Game.Scripts.Commands
                 return;
             }
 
-            var exp = ExpirienceManager.Instance.GetExpForLevel(level);
+            var exp = ExperienceManager.Instance.GetExpForLevel(level);
             if (exp <= 0)
                 return;
-            var diffExp = exp - character.Expirience;
+            var diffExp = exp - character.Experience;
             if (diffExp > 0)
                 character.AddExp(diffExp, true);
             else
             {
                 character.Level = level;
-                character.Expirience = exp;
+                character.Experience = exp;
 
                 character.Hp = character.MaxHp;
                 character.Mp = character.MaxMp;

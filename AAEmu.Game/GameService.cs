@@ -54,7 +54,7 @@ namespace AAEmu.Game
             ShipyardManager.Instance.Load();
 
             FormulaManager.Instance.Load();
-            ExpirienceManager.Instance.Load();
+            ExperienceManager.Instance.Load();
 
             TlIdManager.Instance.Initialize();
             ItemManager.Instance.Load();

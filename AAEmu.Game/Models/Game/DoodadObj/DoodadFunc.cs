@@ -38,11 +38,17 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                     owner.FuncTask = null;
                 }
 
+                if (SoundId > 0)
+                {
+                    owner.BroadcastPacket(new SCDoodadSoundPacket(owner, SoundId), true); // TODO added since some doodad have sound
+                }
+
                 owner.FuncGroupId = (uint)NextPhase;
-                owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(owner), false); // TODO added to work on / off lighting and destruction of barrels / boxes
                 var funcs = DoodadManager.Instance.GetPhaseFunc(owner.FuncGroupId);
                 foreach (var func in funcs)
+                {
                     func?.Use(caster, owner, skillId);
+                }
             }
         }
     }

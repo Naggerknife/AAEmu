@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills;
 using MySql.Data.MySqlClient;
@@ -31,12 +31,12 @@ namespace AAEmu.Game.Models.Game.Char
         public List<AbilityType> GetActiveAbilities()
         {
             var list = new List<AbilityType>();
-            if (Owner.Ability1 != AbilityType.None)
-                list.Add(Owner.Ability1);
-            if (Owner.Ability2 != AbilityType.None)
-                list.Add(Owner.Ability2);
-            if (Owner.Ability3 != AbilityType.None)
-                list.Add(Owner.Ability3);
+            if (Owner.SkillTreeOne != AbilityType.None)
+                list.Add(Owner.SkillTreeOne);
+            if (Owner.SkillTreeTwo != AbilityType.None)
+                list.Add(Owner.SkillTreeTwo);
+            if (Owner.SkillTreeThree != AbilityType.None)
+                list.Add(Owner.SkillTreeThree);
             return list;
         }
 
@@ -50,29 +50,29 @@ namespace AAEmu.Game.Models.Game.Char
         public void AddActiveExp(int exp)
         {
             // TODO SCExpChangedPacket
-            if (Owner.Ability1 != AbilityType.None)
-                Abilities[Owner.Ability1].Exp += exp;
-            if (Owner.Ability2 != AbilityType.None)
-                Abilities[Owner.Ability2].Exp += exp;
-            if (Owner.Ability3 != AbilityType.None)
-                Abilities[Owner.Ability3].Exp += exp;
+            if (Owner.SkillTreeOne != AbilityType.None)
+                Abilities[Owner.SkillTreeOne].Exp += exp;
+            if (Owner.SkillTreeTwo != AbilityType.None)
+                Abilities[Owner.SkillTreeTwo].Exp += exp;
+            if (Owner.SkillTreeThree != AbilityType.None)
+                Abilities[Owner.SkillTreeThree].Exp += exp;
         }
 
         public void Swap(AbilityType oldAbilityId, AbilityType abilityId)
         {
-            if (Owner.Ability1 == oldAbilityId)
+            if (Owner.SkillTreeOne == oldAbilityId)
             {
-                Owner.Ability1 = abilityId;
+                Owner.SkillTreeOne = abilityId;
                 Abilities[abilityId].Order = 0;
             }
-            else if (Owner.Ability2 == oldAbilityId)
+            else if (Owner.SkillTreeTwo == oldAbilityId)
             {
-                Owner.Ability2 = abilityId;
+                Owner.SkillTreeTwo = abilityId;
                 Abilities[abilityId].Order = 1;
             }
-            else if (Owner.Ability3 == oldAbilityId)
+            else if (Owner.SkillTreeThree == oldAbilityId)
             {
-                Owner.Ability3 = abilityId;
+                Owner.SkillTreeThree = abilityId;
                 Abilities[abilityId].Order = 2;
             }
 
@@ -96,11 +96,11 @@ namespace AAEmu.Game.Models.Game.Char
                             Id = (AbilityType) reader.GetByte("id"),
                             Exp = reader.GetInt32("exp")
                         };
-                        if (ability.Id == Owner.Ability1)
+                        if (ability.Id == Owner.SkillTreeOne)
                             ability.Order = 0;
-                        if (ability.Id == Owner.Ability2)
+                        if (ability.Id == Owner.SkillTreeTwo)
                             ability.Order = 1;
-                        if (ability.Id == Owner.Ability3)
+                        if (ability.Id == Owner.SkillTreeThree)
                             ability.Order = 2;
                         Abilities[ability.Id] = ability;
                     }

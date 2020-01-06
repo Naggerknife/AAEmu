@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using AAEmu.Game.Models.Game.Skills.Plots;
 
-namespace AAEmu.Game.Models.Game.Skills
+namespace AAEmu.Game.Models.Game.Skills.Templates
 {
     public class SkillTemplate
     {
-        //public int Start { get; set; }
+        //public int Use { get; set; }
         public uint Id { get; set; }
         public int Cost { get; set; }
         public bool Show { get; set; }
@@ -117,7 +117,7 @@ namespace AAEmu.Game.Models.Game.Skills
         public int SynergyIcon2Id { get; set; }
         public int CombatDiceId { get; set; }
         public bool CanActiveWeaponWithoutAnim { get; set; }
-        public int CustonGcd { get; set; }
+        public int CustomGcd { get; set; }
         public bool CancelOngoingBuffs { get; set; }
         public bool CancelOngoingBuffExceptionTagId { get; set; }
         public bool SourceCannotUseWhileWalk { get; set; }

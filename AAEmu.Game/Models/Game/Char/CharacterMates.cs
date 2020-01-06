@@ -50,7 +50,7 @@ namespace AAEmu.Game.Models.Game.Char
                 Name = name,
                 Owner = Owner.Id,
                 Mileage = 0,
-                Xp = ExpirienceManager.Instance.GetExpForLevel(50, true),
+                Xp = ExperienceManager.Instance.GetExpForLevel(50, true),
                 Hp = 999999,
                 Mp = 999999,
                 UpdatedAt = DateTime.Now,

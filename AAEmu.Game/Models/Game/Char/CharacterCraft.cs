@@ -58,7 +58,7 @@ namespace AAEmu.Game.Models.Game.Char
                 target.ObjId = doodadId;
 
                 var skill = new Skill(SkillManager.Instance.GetSkillTemplate(craft.SkillId));
-                skill.Start(Owner, caster, target);
+                skill.Use(Owner, caster, target);
             }
         }
 

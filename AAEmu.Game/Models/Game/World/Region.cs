@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
@@ -64,22 +65,27 @@ namespace AAEmu.Game.Models.Game.World
         public void RemoveObject(GameObject obj) // TODO Нужно доделать =_+
         {
             if (obj == null)
+            {
                 return;
+            }
             lock (_objectsLock)
             {
                 if (_objects == null || _objectsSize == 0)
+                {
                     return;
-
+                }
                 if (_objectsSize > 1)
                 {
                     var index = -1;
                     for (var i = 0; i < _objects.Length; i++)
-                        if (_objects[i] == obj)
+                    {
+                        if (_objects[i] != obj)
                         {
-                            index = i;
-                            break;
+                            continue;
                         }
-
+                        index = i;
+                        break;
+                    }
                     if (index > -1)
                     {
                         _objects[index] = _objects[_objectsSize - 1];
@@ -93,80 +99,80 @@ namespace AAEmu.Game.Models.Game.World
                     _objects = null;
                     _objectsSize = 0;
                 }
-
                 if (obj is Character)
+                {
                     _charactersSize--;
+                }
             }
         }
 
         public void AddToCharacters(GameObject obj)
         {
             if (_objects == null)
-                return;
-
-            // показать игроку все объекты в регионе
-            if (obj is Character)
             {
-                var character = (Character)obj;
-
-                var units = GetList(new List<Unit>(), obj.ObjId);
-                for (var i = 0; i < units.Count; i++)
+                return;
+            }
+            // показать игроку все объекты в регионе
+            if (obj is Character character1)
+            {
+                var units = GetList(new List<Unit>(), character1.ObjId);
+                foreach (var t in units)
                 {
-                    character.SendPacket(new SCUnitStatePacket(units[i]));
-                    if (units[i] is House house)
-                        character.SendPacket(new SCHouseStatePacket(house));
+                    character1.SendPacket(new SCUnitStatePacket(t));
+                    if (t is House house)
+                    {
+                        character1.SendPacket(new SCHouseStatePacket(house));
+                    }
                 }
-
-                var doodads = GetList(new List<Doodad>(), obj.ObjId).ToArray();
+                var doodads = GetList(new List<Doodad>(), character1.ObjId).ToArray();
                 for (var i = 0; i < doodads.Length; i += 30)
                 {
                     var count = doodads.Length - i;
                     var temp = new Doodad[count <= 30 ? count : 30];
                     Array.Copy(doodads, i, temp, 0, temp.Length);
-                    character.SendPacket(new SCDoodadsCreatedPacket(temp));
+                    character1.SendPacket(new SCDoodadsCreatedPacket(temp));
                 }
             }
-
             // показать объекты всем игрокам в регионе
             foreach (var character in GetList(new List<Character>(), obj.ObjId))
+            {
                 obj.AddVisibleObject(character);
+            }
         }
 
         public void RemoveFromCharacters(GameObject obj)
         {
             if (_objects == null)
-                return;
-
-            // убрать у игрока все видимые объекты в регионе
-            if (obj is Character)
             {
-                var character = (Character)obj;
-
-                var unitIds = GetListId<Unit>(new List<uint>(), obj.ObjId).ToArray();
+                return;
+            }
+            // убрать у игрока все видимые объекты в регионе
+            if (obj is Character character1)
+            {
+                var unitIds = GetListId<Unit>(new List<uint>(), character1.ObjId).ToArray();
                 for (var offset = 0; offset < unitIds.Length; offset += 500)
                 {
                     var length = unitIds.Length - offset;
                     var temp = new uint[length > 500 ? 500 : length];
                     Array.Copy(unitIds, offset, temp, 0, temp.Length);
-                    character.SendPacket(new SCUnitsRemovedPacket(temp));
+                    character1.SendPacket(new SCUnitsRemovedPacket(temp));
                 }
-
-                var doodadIds = GetListId<Doodad>(new List<uint>(), obj.ObjId).ToArray();
+                var doodadIds = GetListId<Doodad>(new List<uint>(), character1.ObjId).ToArray();
                 for (var offset = 0; offset < doodadIds.Length; offset += 400)
                 {
                     var length = doodadIds.Length - offset;
                     var last = length <= 400;
                     var temp = new uint[last ? length : 400];
                     Array.Copy(doodadIds, offset, temp, 0, temp.Length);
-                    character.SendPacket(new SCDoodadsRemovedPacket(last, temp));
+                    character1.SendPacket(new SCDoodadsRemovedPacket(last, temp));
                 }
-
                 // TODO ... others types...
             }
-
             // убрать объекты у всех игроков в регионе
             foreach (var character in GetList(new List<Character>(), obj.ObjId))
+            {
                 obj.RemoveVisibleObject(character);
+            }
         }
 
         public Region[] GetNeighbors()
@@ -176,12 +182,7 @@ namespace AAEmu.Game.Models.Game.World
 
         public bool AreNeighborsEmpty()
         {
-            if (!IsEmpty())
-                return false;
-            foreach (var neighbor in GetNeighbors())
-                if (!neighbor.IsEmpty())
-                    return false;
-            return true;
+            return IsEmpty() && GetNeighbors().All(neighbor => neighbor.IsEmpty());
         }
 
         public bool IsEmpty()
@@ -195,14 +196,13 @@ namespace AAEmu.Game.Models.Game.World
             lock (_objectsLock)
             {
                 if (_objects == null || _objectsSize == 0)
+                {
                     return result;
+                }
                 temp = new GameObject[_objectsSize];
                 Array.Copy(_objects, 0, temp, 0, _objectsSize);
             }
-
-            foreach (var obj in temp)
-                if (obj.ObjId != exclude)
-                    result.Add(obj.ObjId);
+            result.AddRange(from obj in temp where obj.ObjId != exclude select obj.ObjId);
             return result;
         }
 
@@ -216,10 +216,7 @@ namespace AAEmu.Game.Models.Game.World
                 temp = new GameObject[_objectsSize];
                 Array.Copy(_objects, 0, temp, 0, _objectsSize);
             }
-
-            foreach (var obj in temp)
-                if (obj != null && obj.ObjId != exclude)
-                    result.Add(obj);
+            result.AddRange(temp.Where(obj => obj != null && obj.ObjId != exclude));
             return result;
         }
 
@@ -229,15 +226,14 @@ namespace AAEmu.Game.Models.Game.World
             lock (_objectsLock)
             {
                 if (_objects == null || _objectsSize == 0)
+                {
                     return result;
+                }
                 temp = new GameObject[_objectsSize];
                 Array.Copy(_objects, 0, temp, 0, _objectsSize);
             }
 
-            foreach (var obj in temp)
-                if (obj is T && obj.ObjId != exclude)
-                    result.Add(obj.ObjId);
-
+            result.AddRange(from obj in temp where obj is T && obj.ObjId != exclude select obj.ObjId);
             return result;
         }
 
@@ -247,18 +243,13 @@ namespace AAEmu.Game.Models.Game.World
             lock (_objectsLock)
             {
                 if (_objects == null || _objectsSize == 0)
+                {
                     return result;
+                }
                 temp = new GameObject[_objectsSize];
                 Array.Copy(_objects, 0, temp, 0, _objectsSize);
             }
-
-            foreach (var obj in temp)
-            {
-                var item = obj as T;
-                if (item != null && obj.ObjId != exclude)
-                    result.Add(item);
-            }
-
+            result.AddRange(from obj in temp let item = obj as T where item != null && obj.ObjId != exclude select item);
             return result;
         }
 
@@ -268,35 +259,44 @@ namespace AAEmu.Game.Models.Game.World
             lock (_objectsLock)
             {
                 if (_objects == null || _objectsSize == 0)
+                {
                     return result;
+                }
                 temp = new GameObject[_objectsSize];
                 Array.Copy(_objects, 0, temp, 0, _objectsSize);
             }
-
             foreach (var obj in temp)
             {
-                var item = obj as T;
-                if (item == null || obj.ObjId == exclude)
+                if (!(obj is T item) || obj.ObjId == exclude)
+                {
                     continue;
+                }
                 var dx = obj.Position.X - x;
                 dx *= dx;
                 if (dx > sqrad)
+                {
                     continue;
+                }
                 var dy = obj.Position.Y - y;
                 dy *= dy;
                 if (dx + dy < sqrad)
+                {
                     result.Add(item);
+                }
             }
-
             return result;
         }
 
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
             if (obj.GetType() != typeof(Region))
+            {
                 return false;
+            }
             var other = (Region)obj;
             return other._worldId == _worldId && other.X == X && other.Y == Y;
         }

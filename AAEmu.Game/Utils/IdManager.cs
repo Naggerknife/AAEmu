@@ -141,6 +141,8 @@ namespace AAEmu.Game.Utils
                 if (_nextFreeId > objectId)
                     _nextFreeId = objectId;
                 Interlocked.Increment(ref _freeIdCount);
+
+                _log.Warn("{0}: release objectId {1}", _name, usedObjectId);
             }
             else
                 _log.Warn("{0}: release objectId {1} failed", _name, usedObjectId);

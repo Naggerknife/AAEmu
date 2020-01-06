@@ -1,7 +1,7 @@
 ﻿using System;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Models.Tasks.Skills;
+
 using NLog;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
@@ -17,24 +17,17 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             Skill skill,
             SkillObject skillObject,
             DateTime time,
-            int value1,
-            int value2,
-            int value3,
-            int value4)
+            int comboSkillId, int timeFromNow, int value3, int value4)
         {
-            //TODO: this should not auto cast the skill, just make it so that the skill on the hotbar changes to the next skill temporarily (for value2 amount of time)
-            _log.Warn("Special effects: Combo");
-            if (value1 > 0 && caster != null && target != null)
-            {
-                var comboSkill = new Skill(SkillManager.Instance.GetSkillTemplate((uint)value1));
+            _log.Warn("comboSkillId {0}, timeFromNow {1}, value3 {2}, value4 {3}", comboSkillId, timeFromNow, value3, value4);
 
-                TaskManager.Instance.Schedule(new Tasks.Skills.SkillUse(comboSkill,
-                        caster,
-                        casterObj,
-                        targetObj,
-                        skillObject),
-                    TimeSpan.FromMilliseconds(value2));
+            if (comboSkillId <= 0 || caster == null || target == null)
+            {
+                return;
             }
+            // TODO: this should not auto cast the skill, just make it so that the skill on the hotbar changes to the next skill temporarily (for value2 amount of time)
+            var comboSkill = new Skill(SkillManager.Instance.GetSkillTemplate((uint)comboSkillId));
+            TaskManager.Instance.Schedule(new Tasks.Skills.SkillUse(comboSkill, caster, casterObj, targetObj, skillObject), TimeSpan.FromMilliseconds(timeFromNow));
         }
     }
 }

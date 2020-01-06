@@ -396,6 +396,10 @@ namespace AAEmu.Game.Core.Managers
                 case HousingPermission.Family:
                     house.CoOwnerId = connection.ActiveChar.Family;
                     break;
+                case HousingPermission.Private:
+                    break;
+                case HousingPermission.Public:
+                    break;
                 default:
                     house.CoOwnerId = connection.ActiveChar.Id;
                     break;

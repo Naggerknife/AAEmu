@@ -6,8 +6,11 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Error;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Utils.DB;
 using MySql.Data.MySqlClient;
 using NLog;
@@ -23,16 +26,19 @@ namespace AAEmu.Game.Models.Game.Char
         private List<ulong> _removedItems;
 
         public readonly Character Owner;
-        public Item[] Equip;
-        public Item[] Items;
+        private int MaxExpandCapacity = 130; //Max size of inventory and bank is 130 slots
+        private uint ExpansionScrollId = 8000025; //Template Id of expansion scroll
+
+        public Item[] Equip { get; set; }
+        public Item[] Items { get; set; }
         public Item[] Bank { get; set; }
 
         public Inventory(Character owner)
         {
             Owner = owner;
             Equip = new Item[28];
-            Items = new Item[Owner.NumInventorySlots];
-            Bank = new Item[Owner.NumBankSlots];
+            Items = new Item[MaxExpandCapacity];
+            Bank = new Item[MaxExpandCapacity];
             _removedItems = new List<ulong>();
         }
 
@@ -218,6 +224,155 @@ namespace AAEmu.Game.Models.Game.Char
             Owner.SendPacket(new SCItemTaskSuccessPacket(reason, tasks, new List<ulong>()));
             return true;
         }
+       
+        public bool AddExistingItem(Item item, ItemTaskType taskType)
+        {
+            var tasks = new List<ItemTask>();
+            bool successfullyAddedItem;
+            //Check if can be stacked on another existing item stack
+            if (!Items.Contains(item))
+            {
+                foreach (var existingItem in Items)
+                {
+                    if (existingItem != null && existingItem.Template.Id == item.Template.Id && existingItem.Template.MaxCount >= existingItem.Count + item.Count)
+                    {
+                        //Can stack entire item on existing item
+                        existingItem.Count += item.Count;
+
+                        tasks.Add(new ItemCountUpdate(existingItem, item.Count));
+                        ItemIdManager.Instance.ReleaseId((uint)item.Id);
+                        lock (_removedItems)
+                        {
+                            if (!_removedItems.Contains(item.Id))
+                                _removedItems.Add(item.Id);
+                        }
+                        successfullyAddedItem = true;
+                        break;
+                    }
+                    else if (existingItem != null && existingItem.Template.Id == item.Template.Id && existingItem.Template.MaxCount < existingItem.Count)
+                    {
+                        //Can stack part of item on existing item
+                        var countAdded = existingItem.Template.MaxCount - existingItem.Count;
+                        existingItem.Count += countAdded;
+                        item.Count -= countAdded;
+                        tasks.Add(new ItemCountUpdate(existingItem, countAdded));
+                    }
+                }
+            }
+
+            //If item still has count >0, move it to first free slot
+            var firstFreeSlot = GetFirstFreeSlot(SlotType.Inventory);
+            if (firstFreeSlot != -1)
+            {
+                if (item.Template.LootQuestId > 0)
+                {
+                    Owner.Quests.OnItemGather(item, item.Count);
+                }
+                item.Slot = firstFreeSlot;
+                item.SlotType = SlotType.Inventory;
+                Items[item.Slot] = item;
+                tasks.Add(new ItemAdd(item));
+                successfullyAddedItem = true;
+            }
+            else
+            {
+                //no free slots
+                ItemIdManager.Instance.ReleaseId((uint)item.Id);
+                lock (_removedItems)
+                {
+                    if (!_removedItems.Contains(item.Id))
+                        _removedItems.Add(item.Id);
+                }
+
+                if (!Items.Contains(item))
+                    Owner.SendErrorMessage(ErrorMessageType.BagFull);
+                successfullyAddedItem = false;
+            }
+
+            Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
+            return successfullyAddedItem;
+        }
+
+        public void AddNewItem(uint itemTemplateId, int count, byte grade, ItemTaskType taskType, int toSlot = -1, SlotType type = SlotType.Inventory)
+        {
+            var tasks = new List<ItemTask>();
+
+            //Check if can be stacked on another existing item stack
+            var checkStackable = Items;
+            if (type == SlotType.Bank)
+                checkStackable = Bank;
+
+            if (toSlot == -1)
+            {
+                foreach (var existingItem in checkStackable)
+                {
+                    if (existingItem != null && existingItem.Template.Id == itemTemplateId && existingItem.Template.MaxCount > existingItem.Count)
+                    {
+                        var countToAdd = Math.Min(count, existingItem.Template.MaxCount - existingItem.Count);
+                        existingItem.Count += countToAdd;
+                        tasks.Add(new ItemCountUpdate(existingItem, countToAdd));
+                        count -= countToAdd;
+                    }
+                }
+            }
+
+            //If count still has count >0, create new item stacks until count == 0 or out of inventory space
+            var itemTemplate = ItemManager.Instance.GetTemplate(itemTemplateId);
+            while (count > 0 && CountFreeSlots(type) > 0)
+            {
+                var itemCount = Math.Min(itemTemplate.MaxCount, count);
+                var createdItem = ItemManager.Instance.Create(itemTemplateId, itemCount, grade);
+                int firstFreeSlot;
+
+                if (toSlot <= -1)
+                {
+                    firstFreeSlot = GetFirstFreeSlot(type);
+                }
+                else
+                {
+                    firstFreeSlot = toSlot;
+                }
+
+                count -= itemCount;
+
+                if (firstFreeSlot != -1)
+                {
+                    if (createdItem.Template.LootQuestId > 0)
+                    {
+                        Owner.Quests.OnItemGather(createdItem, createdItem.Count);
+                    }
+                    createdItem.Slot = firstFreeSlot;
+                    createdItem.SlotType = type;
+
+                    if (type == SlotType.Inventory)
+                    {
+                        Items[createdItem.Slot] = createdItem;
+                    }
+                    else if (type == SlotType.Bank)
+                    {
+                        Bank[createdItem.Slot] = createdItem;
+                    }
+
+                    tasks.Add(new ItemAdd(createdItem));
+                }
+                else
+                {
+                    //no free slots, return null
+                    ItemIdManager.Instance.ReleaseId((uint)createdItem.Id);
+                    lock (_removedItems)
+                    {
+                        if (!_removedItems.Contains(createdItem.Id))
+                            _removedItems.Add(createdItem.Id);
+                    }
+                    _log.Warn($"Not enough space to add remaining {count} items of itemTemplateId {itemTemplateId}.");
+                    break;
+                }
+            }
+
+            Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
+            return;
+
+        }
 
         public List<ItemTask> TryAddItem(Item item, SlotType type, bool dontAddPartialCount)
         {
@@ -248,7 +403,7 @@ namespace AAEmu.Game.Models.Game.Char
 
             if (item.Template.MaxCount > 1)
             {
-                for (int i = 0; i < checkStackable.Length && count > 0; i++)
+                for (var i = 0; i < checkStackable.Length && count > 0; i++)
                 {
                     var invItem = checkStackable[i];
                     if (item.CanStackInto(invItem))
@@ -481,7 +636,6 @@ namespace AAEmu.Game.Models.Game.Char
                     break;
             }
             Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
-            return;
         }
         
         public void RemoveItem(Item item, bool release)
@@ -524,7 +678,7 @@ namespace AAEmu.Game.Models.Game.Char
                     _removedItems.Add(item.Id);
             }
         }
-
+        
         public List<(Item Item, int Count)> RemoveItem(uint templateId, int count)
         {
             var res = new List<(Item, int)>();
@@ -593,6 +747,345 @@ namespace AAEmu.Game.Models.Game.Char
                 if (item != null && item.TemplateId == templateId)
                     count += item.Count;
             return count;
+        }
+
+        //For removing item count from an item and moving that count to either a new item or adding to an existing item's count.
+        public void SplitItemStack(ulong fromItemId, SlotType fromType, byte fromSlot, ulong toItemId, SlotType toType, byte toSlot, int count = 0)
+        {
+            var fromItem = GetItem(fromType, fromSlot);
+            var toItem = GetItem(toType, toSlot);
+
+            //Make sure you cannot stack different item types, different grades, or items with different flags (eg. bound items into unbound) onto each other.
+            if (fromItem == null || (toItem != null && ((fromItem.TemplateId != toItem.TemplateId) || (fromItem.Grade != toItem.Grade) || (fromItem.Flags != toItem.Flags))))
+                return;
+
+            if (count >= fromItem.Count)
+                count = fromItem.Count;
+
+            if (toItem == null)
+            {
+                fromItem.Count -= count;
+                AddNewItem(fromItem.TemplateId, count, fromItem.Grade, ItemTaskType.Split, toSlot, toType);
+                Owner.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.Split, new List<ItemTask>() { new ItemCountUpdate(fromItem, -count) }, new List<ulong>()));
+            }
+            else
+            {
+                StackIntoItem(fromItem, toItem, ItemTaskType.Split, count);
+            }
+        }
+
+        //For moving item count from one item to another.
+        public void StackIntoItem(Item fromItem, Item stackIntoItem, ItemTaskType taskType, int count = 0)
+        {
+            if (count == 0)
+                count = Math.Min(fromItem.Count, stackIntoItem.Template.MaxCount - stackIntoItem.Count);
+
+            stackIntoItem.Count += count;
+            fromItem.Count -= count;
+
+            var tasks = new List<ItemTask>();
+
+            if (fromItem.Count > 0)
+                tasks.Add(new ItemCountUpdate(fromItem, -count));
+            else
+                RemoveItem(fromItem, true, taskType);
+
+            tasks.Add(new ItemCountUpdate(stackIntoItem, count));
+            Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, tasks, new List<ulong>()));
+        }
+
+        public void Move(ulong fromItemId, SlotType fromType, byte fromSlot, ulong toItemId, SlotType toType, byte toSlot)
+        {
+            //TODO: refactor this entire method because it is aids    
+
+            var fromItem = GetItem(fromType, fromSlot);
+            var toItem = GetItem(toType, toSlot);
+
+            if (fromItem != null && fromItem.Id != fromItemId)
+            {
+                _log.Warn("ItemMove: {0} {1}", fromItem.Id, fromItemId);
+                // TODO ... ItemNotify?
+                return;
+            }
+
+            if (toItem != null && toItem.Id != toItemId)
+            {
+                _log.Warn("ItemMove: {0} {1}", toItem.Id, toItemId);
+                // TODO ... ItemNotify?
+                return;
+            }
+
+            //Check if items can be stacked, if they can't then continue swapping
+            if (fromItem != null && toItem != null && fromItem.CanStackInto(toItem))
+            {
+                StackIntoItem(fromItem, toItem, ItemTaskType.SwapItems);
+                return;
+            }
+
+            var removingItems = new List<ulong>();
+            var tasks = new List<ItemTask>();
+
+            if (fromType == SlotType.Equipment && toItem != null && toItem.Template.BindType == ItemBindType.SoulboundEquip)
+            {
+                toItem.SetFlag(ItemFlag.SoulBound);
+            }
+
+            tasks.Add(new ItemMove(fromType, fromSlot, fromItemId, toType, toSlot, toItemId));
+
+            uint toItemEquipBuffId = 0;
+            if (toItem != null)
+            {
+                toItemEquipBuffId = ItemManager.Instance.GetItemEquipBuff(toItem.TemplateId, toItem.Grade);
+            }
+
+            uint fromItemEquipBuffId = 0;
+            if (fromItem != null)
+            {
+                fromItemEquipBuffId = ItemManager.Instance.GetItemEquipBuff(fromItem.TemplateId, fromItem.Grade);
+            }
+
+            var updatedEquipment = false;
+            var taskOverridden = false;
+            if (fromType == SlotType.Equipment)
+            {
+                if (toItem != null && (fromSlot == (int)EquipmentItemSlot.Mainhand || fromSlot == (int)EquipmentItemSlot.Offhand))
+                {
+                    var toItemTemplate = ((WeaponTemplate)toItem.Template);
+                    var toItemType = toItemTemplate.HoldableTemplate.SlotTypeId;
+
+                    if (fromSlot == (int)EquipmentItemSlot.Mainhand && toItemType == (int)EquipmentItemSlotType.TwoHanded)
+                    {
+                        //Equipping 2h weapon, remove offhand
+                        if (Equip[(int)EquipmentItemSlot.Mainhand] != null && Equip[(int)EquipmentItemSlot.Offhand] != null)
+                        {
+                            var task = TryRemoveWeapon((int)EquipmentItemSlot.Offhand, toSlot);
+                            if (task != null)
+                            {
+                                Equip[(int)EquipmentItemSlot.Mainhand] = toItem;
+                                Equip[(int)EquipmentItemSlot.Mainhand].Slot = (int)EquipmentItemSlot.Mainhand;
+                                Equip[(int)EquipmentItemSlot.Mainhand].SlotType = SlotType.Equipment;
+                                tasks.Add(task);
+                            }
+                            else
+                            {
+                                Owner.SendErrorMessage(ErrorMessageType.CantChangeEquip);
+                                return;
+                            }
+                        }
+                        else if (Equip[(int)EquipmentItemSlot.Mainhand] == null && Equip[(int)EquipmentItemSlot.Offhand] != null)
+                        {
+                            //No equipped main-hand, move offhand to 2h inv slot after 2h equipped
+                            Equip[(int)EquipmentItemSlot.Mainhand] = toItem;
+                            Items[toSlot] = null;
+                            taskOverridden = true;
+                            tasks.Add(MoveEquipToEmptyInv((int)EquipmentItemSlot.Offhand, toSlot));
+                            taskOverridden = true;
+                        }
+                        else
+                        {
+                            Equip[fromSlot] = toItem;
+                        }
+                        updatedEquipment = true;
+                    }
+                    else if (fromSlot == (int)EquipmentItemSlot.Offhand && Equip[(int)EquipmentItemSlot.Mainhand] != null && ((WeaponTemplate)Equip[(int)EquipmentItemSlot.Mainhand].Template).HoldableTemplate.SlotTypeId == (int)EquipmentItemSlotType.TwoHanded)
+                    {
+                        //Equipping an off-hand, remove 2h
+                        if (Equip[(int)EquipmentItemSlot.Offhand] != null)
+                        {
+                            var task = TryRemoveWeapon((int)EquipmentItemSlot.Mainhand, toSlot);
+                            if (task != null)
+                            {
+                                Equip[(int)EquipmentItemSlot.Offhand] = toItem;
+                                Equip[(int)EquipmentItemSlot.Offhand].Slot = (int)EquipmentItemSlot.Offhand;
+                                Equip[(int)EquipmentItemSlot.Offhand].SlotType = SlotType.Equipment;
+                                tasks.Add(task);
+                            }
+                            else
+                            {
+                                Owner.SendErrorMessage(ErrorMessageType.CantChangeEquip);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            //No equipped offhand, move equipped 2h to offhand's inv slot
+                            Equip[(int)EquipmentItemSlot.Offhand] = toItem;
+                            Items[toSlot] = null;
+                            taskOverridden = true;
+                            tasks.Add(MoveEquipToEmptyInv((int)EquipmentItemSlot.Mainhand, toSlot));
+                        }
+                    }
+                    else
+                    {
+                        //Not equipping 2h, or offhand while no 2h equipped
+                        Equip[fromSlot] = toItem;
+                    }
+                }
+                else
+                {
+                    // not equipping mainhand or offhand equipment
+                    Equip[fromSlot] = toItem;
+                }
+                updatedEquipment = true;
+            }
+            else if (fromType == SlotType.Inventory)
+            {
+                Items[fromSlot] = toItem;
+                if (toItemEquipBuffId != 0 && toType == SlotType.Equipment)
+                {
+                    Owner.Effects.RemoveBuff(toItemEquipBuffId);
+                }
+            }
+            else if (fromType == SlotType.Bank)
+            {
+                Bank[fromSlot] = toItem;
+                if (toItemEquipBuffId != 0 && toType == SlotType.Equipment)
+                {
+                    Owner.Effects.RemoveBuff(toItemEquipBuffId);
+                }
+            }
+
+            if (taskOverridden == false && toType == SlotType.Equipment)
+            {
+                if (fromItem != null && (toSlot == (int)EquipmentItemSlot.Mainhand || toSlot == (int)EquipmentItemSlot.Offhand))
+                {
+                    var fromItemTemplate = ((WeaponTemplate)fromItem.Template);
+                    var fromItemType = fromItemTemplate.HoldableTemplate.SlotTypeId;
+
+                    if (toSlot == (int)EquipmentItemSlot.Mainhand && fromItemType == (int)EquipmentItemSlotType.TwoHanded)
+                    {
+                        //Equipping 2h weapon, remove offhand
+                        if (Equip[(int)EquipmentItemSlot.Mainhand] != null && Equip[(int)EquipmentItemSlot.Offhand] != null)
+                        {
+                            var task = TryRemoveWeapon((int)EquipmentItemSlot.Offhand, fromSlot);
+                            if (task != null)
+                            {
+                                Equip[(int)EquipmentItemSlot.Mainhand] = fromItem;
+                                Equip[(int)EquipmentItemSlot.Mainhand].Slot = (int)EquipmentItemSlot.Mainhand;
+                                Equip[(int)EquipmentItemSlot.Mainhand].SlotType = SlotType.Equipment;
+                                tasks.Add(task);
+                            }
+                            else
+                            {
+                                Owner.SendErrorMessage(ErrorMessageType.CantChangeEquip);
+                                return;
+                            }
+                        }
+                        else if (Equip[(int)EquipmentItemSlot.Mainhand] == null && Equip[(int)EquipmentItemSlot.Offhand] != null)
+                        {
+                            //No equipped main-hand, move offhand to 2h inv slot after 2h equipped
+                            Equip[(int)EquipmentItemSlot.Mainhand] = fromItem; ;
+                            Items[fromSlot] = null;
+                            taskOverridden = true;
+                            tasks.Add(MoveEquipToEmptyInv((int)EquipmentItemSlot.Offhand, fromSlot));
+                        }
+                        else
+                        {
+                            Equip[toSlot] = fromItem;
+                        }
+                        updatedEquipment = true;
+                    }
+                    else if (toSlot == (int)EquipmentItemSlot.Offhand && Equip[(int)EquipmentItemSlot.Mainhand] != null && ((WeaponTemplate)Equip[(int)EquipmentItemSlot.Mainhand].Template).HoldableTemplate.SlotTypeId == (int)EquipmentItemSlotType.TwoHanded)
+                    {
+                        //Equipping an off-hand, remove 2h
+                        if (Equip[(int)EquipmentItemSlot.Offhand] != null)
+                        {
+                            var task = TryRemoveWeapon((int)EquipmentItemSlot.Mainhand, fromSlot);
+                            if (task != null)
+                            {
+                                Equip[(int)EquipmentItemSlot.Offhand] = fromItem;
+                                Equip[(int)EquipmentItemSlot.Offhand].Slot = (int)EquipmentItemSlot.Offhand;
+                                Equip[(int)EquipmentItemSlot.Offhand].SlotType = SlotType.Equipment;
+                                tasks.Add(task);
+                            }
+                            else
+                            {
+                                Owner.SendErrorMessage(ErrorMessageType.CantChangeEquip);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            //No equipped offhand, move equipped 2h to offhand's inv slot
+                            Equip[(int)EquipmentItemSlot.Offhand] = fromItem; ;
+                            Items[fromSlot] = null;
+                            taskOverridden = true;
+                            tasks.Add(MoveEquipToEmptyInv((int)EquipmentItemSlot.Mainhand, fromSlot));
+                        }
+                    }
+                    else
+                    {
+                        //Not equipping 2h, or offhand while no 2h equipped
+                        Equip[toSlot] = fromItem;
+                    }
+                }
+                else
+                {
+                    // not equipping mainhand or offhand equipment
+                    Equip[toSlot] = fromItem;
+                }
+                updatedEquipment = true;
+            }
+            else if (!taskOverridden && toType == SlotType.Inventory)
+            {
+                Items[toSlot] = fromItem;
+                if (fromItemEquipBuffId != 0 && fromType == SlotType.Equipment)
+                {
+                    Owner.Effects.RemoveBuff(fromItemEquipBuffId);
+                }
+
+            }
+            else if (toType == SlotType.Bank)
+            {
+                Bank[toSlot] = fromItem;
+                if (fromItemEquipBuffId != 0 && fromType == SlotType.Equipment)
+                {
+                    Owner.Effects.RemoveBuff(fromItemEquipBuffId);
+                }
+
+                if (taskOverridden && fromItem != null)
+                {
+                    fromItem.Slot = toSlot;
+                    fromItem.SlotType = SlotType.Bank;
+                }
+            }
+
+            if (updatedEquipment == true)
+            {
+                UpdateEquipmentBuffs();
+            }
+
+            if (taskOverridden == false && fromItem != null)
+            {
+                fromItem.SlotType = toType;
+                fromItem.Slot = toSlot;
+            }
+
+            if (taskOverridden == false && toItem != null)
+            {
+                toItem.SlotType = fromType;
+                toItem.Slot = fromSlot;
+            }
+
+            if (fromItem != null) tasks.Add(new ItemUpdateBits(fromItem));
+            if (toItem != null) tasks.Add(new ItemUpdateBits(toItem));
+
+            Owner.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.SwapItems, tasks, removingItems));
+
+
+            if (fromType == SlotType.Equipment)
+                Owner.BroadcastPacket(
+                    new SCUnitEquipmentsChangedPacket(Owner.ObjId, new[]
+                    {
+                        (fromSlot, Equip[fromSlot])
+                    }), false);
+            if (toType == SlotType.Equipment)
+                Owner.BroadcastPacket(
+                    new SCUnitEquipmentsChangedPacket(Owner.ObjId, new[]
+                    {
+                        (toSlot, Equip[toSlot])
+                    }), false);
+
         }
 
         public void Move(ulong fromItemId, SlotType fromType, byte fromSlot, ulong toItemId, SlotType toType, byte toSlot, int count = 0)
@@ -665,6 +1158,325 @@ namespace AAEmu.Game.Models.Game.Char
                     {
                         (toSlot, Equip[toSlot])
                     }), false);
+        }
+
+        public ItemMove TryRemoveWeapon(byte equipSlot, int ignoreSlot)
+        {
+            var openSlot = GetFirstFreeSlot(SlotType.Inventory, ignoreSlot);
+            if (openSlot == -1)
+            {
+                //TODO: Notify not enough inv space for offhand
+                _log.Warn("TryRemoveWeapon Failed...");
+                return null;
+            }
+
+            return MoveEquipToEmptyInv(equipSlot, openSlot);
+        }
+
+        public ItemMove MoveEquipToEmptyInv(byte equipSlot, int emptyInvSlot)
+        {
+            if (Items[emptyInvSlot] != null)
+            {
+                //Empty slot is not empty
+                _log.Warn("MoveEquipToEmptyInv: EmptyInvSlot is not empty...");
+                return null;
+            }
+
+            ulong fromId;
+            if (Equip[equipSlot] == null)
+            {
+                fromId = 0;
+            }
+            else
+            {
+                fromId = Equip[equipSlot].Id;
+            }
+            ulong toId;
+            if (Items[emptyInvSlot] == null)
+            {
+                toId = 0;
+            }
+            else
+            {
+                toId = Items[emptyInvSlot].Id;
+            }
+
+            var EquipBuffId = ItemManager.Instance.GetItemEquipBuff(Equip[equipSlot].TemplateId, Equip[equipSlot].Grade);
+            Owner.Effects.RemoveBuff(EquipBuffId);
+
+            var task = new ItemMove(SlotType.Equipment, equipSlot, fromId, SlotType.Inventory, (byte)emptyInvSlot, toId);
+
+            Items[emptyInvSlot] = Equip[equipSlot];
+            Items[emptyInvSlot].Slot = emptyInvSlot;
+            Items[emptyInvSlot].SlotType = SlotType.Inventory;
+            Equip[equipSlot] = null;
+
+            Owner.BroadcastPacket(new SCUnitEquipmentsChangedPacket(Owner.ObjId, new[] { (equipSlot, Equip[equipSlot]) }), false);
+
+            return task;
+        }
+
+        public void UpdateEquipmentBuffs()
+        {
+            //Weapon type buff
+            uint mainHandType = 0;
+            WeaponTemplate mainHandTemplate = null;
+            if (Equip[(int)EquipmentItemSlot.Mainhand] != null)
+            {
+                mainHandTemplate = ((WeaponTemplate)Equip[(int)EquipmentItemSlot.Mainhand].Template);
+                mainHandType = mainHandTemplate.HoldableTemplate.SlotTypeId;
+            }
+            uint offHandType = 0;
+            WeaponTemplate offHandTemplate = null;
+            if (Equip[(int)EquipmentItemSlot.Offhand] != null)
+            {
+                offHandTemplate = ((WeaponTemplate)Equip[(int)EquipmentItemSlot.Offhand].Template);
+                offHandType = offHandTemplate.HoldableTemplate.SlotTypeId;
+            }
+
+            uint newWeaponBuff = 0;
+            if (offHandType == (int)EquipmentItemSlotType.Shield)
+            {
+                newWeaponBuff = (uint)WeaponTypeBuff.Shield;
+            }
+            else if (mainHandType == (int)EquipmentItemSlotType.TwoHanded)
+            { //2h
+                newWeaponBuff = (uint)WeaponTypeBuff.TwoHanded;
+            }
+            else if (mainHandType != 0 && offHandType != 0)
+            { //duel wield
+                newWeaponBuff = (uint)WeaponTypeBuff.DuelWield;
+            }
+            else
+            {
+                newWeaponBuff = (uint)WeaponTypeBuff.None;
+            }
+
+
+            if (Owner.WeaponTypeBuffId != newWeaponBuff)
+            {
+                Owner.Effects.RemoveBuff(Owner.WeaponTypeBuffId);
+
+                if (newWeaponBuff != 0)
+                {
+                    Owner.Effects.AddEffect(new Effect(Owner, Owner, SkillCaster.GetByType(SkillCasterType.Item), SkillManager.Instance.GetBuffTemplate(newWeaponBuff), null, DateTime.Now));
+                }
+
+                Owner.WeaponTypeBuffId = newWeaponBuff;
+            }
+
+            //Weapon set buff
+            if (mainHandTemplate != null && offHandTemplate != null && mainHandTemplate.EquipSetId == offHandTemplate.EquipSetId)
+            {
+                if (Owner.WeaponEquipSetBuffId != mainHandTemplate.EquipSetId)
+                { //Don't remove and reapply the same buff
+                    var WeaponEquipSet = ItemManager.Instance.GetItemSetBonus(mainHandTemplate.EquipSetId);
+
+                    Owner.Effects.RemoveBuff(Owner.WeaponEquipSetBuffId);
+
+                    if (WeaponEquipSet.SetBonuses[2].BuffId != 0 && !Owner.Effects.CheckBuff(WeaponEquipSet.SetBonuses[2].BuffId))
+                    {
+                        Owner.Effects.AddEffect(new Effect(Owner, Owner, SkillCaster.GetByType(SkillCasterType.Item), SkillManager.Instance.GetBuffTemplate(WeaponEquipSet.SetBonuses[2].BuffId), null, DateTime.Now));
+                    }
+
+                    Owner.WeaponEquipSetBuffId = WeaponEquipSet.SetBonuses[2].BuffId;
+                }
+            }
+            else
+            {
+                Owner.Effects.RemoveBuff(Owner.WeaponEquipSetBuffId);
+            }
+
+            //Equip effects
+            foreach (var equipItem in Equip)
+            {
+                if (equipItem != null)
+                {
+                    var EquipBuffId = ItemManager.Instance.GetItemEquipBuff(equipItem.TemplateId, equipItem.Grade);
+                    if (EquipBuffId != 0 && !Owner.Effects.CheckBuff(EquipBuffId))
+                    {
+                        Owner.Effects.AddEffect(new Effect(Owner, Owner, SkillCaster.GetByType(SkillCasterType.Item), SkillManager.Instance.GetBuffTemplate(EquipBuffId), null, DateTime.Now));
+                    }
+                }
+            }
+
+            //Armor 3/7 set buffs
+            //Armor grade buff
+            var armor = new List<Armor> {
+                (Armor)Equip[(int)EquipmentItemSlot.Head],
+                (Armor)Equip[(int)EquipmentItemSlot.Chest],
+                (Armor)Equip[(int)EquipmentItemSlot.Waist],
+                (Armor)Equip[(int)EquipmentItemSlot.Legs],
+                (Armor)Equip[(int)EquipmentItemSlot.Hands],
+                (Armor)Equip[(int)EquipmentItemSlot.Feet],
+                (Armor)Equip[(int)EquipmentItemSlot.Arms]
+            };
+
+            uint maxKind = 0;
+            var armorSets = new Dictionary<uint, uint>();
+            //Key = Equipment Set Id
+            //Value = count
+
+            var armorInfo = new Dictionary<uint, List<uint>>();
+            //Key = Armor kind
+            //List[0] = count
+            //List[1] = lowest grade >= arcane
+            //List[2] = calculated ab_level to send
+
+            foreach (var piece in armor)
+            {
+                if (piece != null)
+                {
+                    var pieceTemplate = ((ArmorTemplate)piece.Template);
+
+                    var kind = pieceTemplate.KindTemplate.TypeId;
+                    var grade = piece.Grade;
+
+                    if (!armorSets.ContainsKey(pieceTemplate.EquipSetId))
+                    {
+                        armorSets.Add(pieceTemplate.EquipSetId, 1);
+                    }
+                    else
+                    {
+                        armorSets[pieceTemplate.EquipSetId]++;
+                    }
+
+                    if (!armorInfo.ContainsKey(kind))
+                    {
+                        armorInfo.Add(kind, new List<uint> { 0, 0, 0 });
+                    }
+                    armorInfo[kind][0]++;
+
+                    if (grade >= 4)
+                    {
+                        if (armorInfo[kind][1] == 0)
+                        {
+                            armorInfo[kind][1] = grade;
+                        }
+                        else if (armorInfo[kind][1] > grade)
+                        {
+                            armorInfo[kind][1] = grade;
+                        }
+                    }
+
+                    if (armorInfo[kind][0] > maxKind)
+                    {
+                        maxKind = kind;
+                    }
+
+                    armorInfo[kind][2] += (uint)((pieceTemplate.Level * pieceTemplate.Level) / 15) + 30;
+                }
+            }
+
+            uint armorKindBuffId = 0;
+            uint armorGradeBuffId = 0;
+            if (maxKind != 0 && armorInfo[maxKind][0] >= 4 && armorInfo[maxKind][0] < 7)
+            {
+                switch (maxKind)
+                {
+                    case 1:
+                        armorKindBuffId = (uint)ArmorKindBuff.Cloth4;
+                        break;
+                    case 2:
+                        armorKindBuffId = (uint)ArmorKindBuff.Leather4;
+                        break;
+                    case 3:
+                        armorKindBuffId = (uint)ArmorKindBuff.Plate4;
+                        break;
+                }
+            }
+            else if (maxKind != 0 && armorInfo[maxKind][0] == 7)
+            {
+                switch (maxKind)
+                {
+                    case 1:
+                        armorKindBuffId = (uint)ArmorKindBuff.Cloth7;
+                        break;
+                    case 2:
+                        armorKindBuffId = (uint)ArmorKindBuff.Leather7;
+                        break;
+                    case 3:
+                        armorKindBuffId = (uint)ArmorKindBuff.Plate7;
+                        break;
+                }
+            }
+
+            if (armorKindBuffId != 0)
+            {
+                // Half/Full Armor Kind Buff
+                if (Owner.ArmorKindBuffId != armorKindBuffId)
+                {
+                    Owner.Effects.RemoveBuff(Owner.ArmorKindBuffId);
+                    Owner.Effects.AddEffect(new Effect(Owner, Owner, SkillCaster.GetByType(SkillCasterType.Item), SkillManager.Instance.GetBuffTemplate(armorKindBuffId), null, DateTime.Now));
+                    Owner.ArmorKindBuffId = armorKindBuffId;
+                }
+
+                //Armor Grade Buff
+                if (Owner.ArmorGradeBuffId != armorGradeBuffId)
+                {
+                    Owner.Effects.RemoveBuff(Owner.ArmorGradeBuffId);
+                }
+                armorGradeBuffId = ItemManager.Instance.GetArmorGradeBuffId(maxKind, armorInfo[maxKind][1]);
+
+                if (armorGradeBuffId != 0 && !Owner.Effects.CheckBuff(armorGradeBuffId))
+                {
+                    Owner.Effects.AddEffect(new Effect(Owner, Owner, SkillCaster.GetByType(SkillCasterType.Item), SkillManager.Instance.GetBuffTemplate(armorGradeBuffId), null, DateTime.Now, (short)armorInfo[maxKind][2]));
+                }
+                else if (armorGradeBuffId != 0 && Owner.Effects.CheckBuff(armorGradeBuffId))
+                {
+                    Owner.Effects.AddEffect(new Effect(Owner, Owner, SkillCaster.GetByType(SkillCasterType.Item), SkillManager.Instance.GetBuffTemplate(armorGradeBuffId), null, DateTime.Now, (short)armorInfo[maxKind][2])); //TODO: update buff instead of reapplying
+                }
+
+                Owner.ArmorGradeBuffId = armorGradeBuffId;
+
+            }
+            else
+            {
+                Owner.Effects.RemoveBuff(Owner.ArmorKindBuffId);
+                Owner.Effects.RemoveBuff(Owner.ArmorGradeBuffId);
+                Owner.ArmorKindBuffId = 0;
+            }
+
+            //Get Armor Set Bonuses
+            var armorSetBuffIds = new List<uint>();
+            foreach (var set in armorSets)
+            {
+                var armorSet = ItemManager.Instance.GetItemSetBonus(set.Key);
+                if (armorSet.SetBonuses.Keys.Min() <= set.Value)
+                {
+                    uint highestNumPieces = 0;
+                    foreach (var numPieces in armorSet.SetBonuses.Keys)
+                    {
+                        if (numPieces <= set.Value && numPieces > highestNumPieces)
+                        {
+                            highestNumPieces = numPieces;
+                        }
+                    }
+                    if (highestNumPieces != 0)
+                    {
+                        armorSetBuffIds.Add(armorSet.SetBonuses[highestNumPieces].BuffId);
+                    }
+                }
+            }
+
+            //Apply Armor Set Bonuses
+            foreach (var buffId in armorSetBuffIds)
+            {
+                if (!Owner.ArmorSetBuffIds.Contains(buffId))
+                {
+                    Owner.Effects.AddEffect(new Effect(Owner, Owner, SkillCaster.GetByType(SkillCasterType.Item), SkillManager.Instance.GetBuffTemplate(buffId), null, DateTime.Now));
+                }
+            }
+
+            //Remove old Armor set bonuses
+            foreach (var buffId in Owner.ArmorSetBuffIds)
+            {
+                if (!armorSetBuffIds.Contains(buffId))
+                {
+                    Owner.Effects.RemoveBuff(buffId);
+                }
+            }
+            Owner.ArmorSetBuffIds = armorSetBuffIds;
         }
 
         public bool TakeoffBackpack()
@@ -768,6 +1580,65 @@ namespace AAEmu.Game.Models.Game.Char
             return slot;
         }
         
+
+        public int GetFirstFreeSlot(SlotType type)
+        {
+            var slot = -1;
+            if (type == SlotType.Inventory)
+            {
+                for (var i = 0; i < Owner.NumInventorySlots; i++)
+                {
+                    if (Items[i] == null)
+                    {
+                        slot = i;
+                        break;
+                    }
+                }
+            }
+            else if (type == SlotType.Bank)
+            {
+                for (var i = 0; i < Owner.NumBankSlots; i++)
+                {
+                    if (Items[i] == null)
+                    {
+                        slot = i;
+                        break;
+                    }
+                }
+            }
+
+            return slot;
+        }
+
+        public int GetFirstFreeSlot(SlotType type, int ignoreSlot)
+        {
+            var slot = -1;
+            if (type == SlotType.Inventory)
+            {
+                for (var i = 0; i < Owner.NumInventorySlots; i++)
+                {
+                    if (Items[i] == null && i != ignoreSlot)
+                    {
+                        slot = i;
+                        break;
+                    }
+                }
+            }
+            else if (type == SlotType.Bank)
+            {
+                for (var i = 0; i < Owner.NumBankSlots; i++)
+                {
+                    if (Items[i] == null && i != ignoreSlot)
+                    {
+                        slot = i;
+                        break;
+                    }
+                }
+            }
+
+            return slot;
+        }
+
         private void SendFragmentedInventory(SlotType slotType, byte numItems, Item[] bag)
         {
             var tempItem = new Item[10];
@@ -786,116 +1657,102 @@ namespace AAEmu.Game.Models.Game.Char
 
         public void ExpandSlot(SlotType slotType)
         {
-            var isBank = slotType == SlotType.Bank;
-            var step = ((isBank ? Owner.NumBankSlots : Owner.NumInventorySlots) - 50) / 10;
-            var expands = CharacterManager.Instance.GetExpands(step);
-            if (expands == null)
-                return;
-            var index = expands.FindIndex(e => e.IsBank == isBank);
-            if (index == -1)
-                return;
-            var expand = expands[index];
-            if (expand.Price != 0 && Owner.Money < expand.Price)
+            /*
+            * NOTE: server side sqlite db bag_expands table contains no item_id's or  item_counts, old expansion method will always fail
+            * while successful expansion is done client side, causing item's placed in the new slots client side to be placed outside of 
+            * serverside inventory array.
+            */
+
+            if (GetItemsCount(ExpansionScrollId) < 1)
             {
-                _log.Warn("No Money for expand!");
+                //Not enough expansion scrolls
+                Owner.SendErrorMessage(ErrorMessageType.NotEnoughExpandItem);
                 return;
             }
 
-            if (expand.ItemId != 0 && expand.ItemCount != 0 && !CheckItems(expand.ItemId, expand.ItemCount))
+            var slots = 0;
+            var price = 0;
+            var taskType = ItemTaskType.ExpandBag;
+            if (slotType == SlotType.Bank)
             {
-                _log.Warn("Item or Count not fount.");
-                return;
-            }
-
-            var tasks = new List<ItemTask>();
-            if (expand.Price != 0)
-            {
-                Owner.Money -= expand.Price;
-                tasks.Add(new MoneyChange(-expand.Price));
-            }
-
-            if (expand.ItemId != 0 && expand.ItemCount != 0)
-            {
-                var items = RemoveItem(expand.ItemId, expand.ItemCount);
-
-                foreach (var (item, count) in items)
+                var nextExpand = CharacterManager.Instance.GetExpandForNextStep(SlotType.Bank, ((Owner.NumBankSlots - 50) / 10));
+                if (nextExpand != null)
                 {
-                    if (item.Count == 0)
-                        tasks.Add(new ItemRemove(item));
-                    else
-                        tasks.Add(new ItemCountUpdate(item, -count));
+                    if (Owner.Money < nextExpand.Price)
+                    {
+                        //Not enough money to expand bank
+                        Owner.SendErrorMessage(ErrorMessageType.NotEnoughCoin);
+                        return;
+                    }
+
+                    if (Owner.NumBankSlots >= MaxExpandCapacity)
+                    {
+                        //Already Expanded bank to maximum size
+                        return;
+                    }
+
+                    Owner.NumBankSlots += 10;
+                    slots = Owner.NumBankSlots;
+                    taskType = ItemTaskType.ExpandBank;
+                }
+                else
+                {
+                    //Bank already Expanded to maximum size
+                    return;
                 }
             }
 
-            Owner.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.SwapItems, tasks, new List<ulong>()));
-            if (isBank)
-                Owner.NumBankSlots = (short)(50 + 10 * (1 + step));
-            else
-                Owner.NumInventorySlots = (byte)(50 + 10 * (1 + step));
+            if (slotType == SlotType.Inventory)
+            {
+                var nextExpand = CharacterManager.Instance.GetExpandForNextStep(SlotType.Inventory, ((Owner.NumInventorySlots - 50) / 10));
+                if (nextExpand != null)
+                {
+                    if (Owner.Money < nextExpand.Price)
+                    {
+                        //Not enough money to expand Inventory
+                        Owner.SendErrorMessage(ErrorMessageType.NotEnoughCoin);
+                        return;
+                    }
 
-            Owner.SendPacket(
-                new SCInvenExpandedPacket(
-                    isBank ? SlotType.Bank : SlotType.Inventory,
-                    isBank ? (byte)Owner.NumBankSlots : Owner.NumInventorySlots
-                )
-            );
+                    if (Owner.NumBankSlots >= MaxExpandCapacity)
+                    {
+                        //Already inventory to maximum size
+                        return;
+                    }
+
+                    Owner.NumInventorySlots += 10;
+                    slots = Owner.NumInventorySlots;
+
+                }
+                else
+                {
+                    //Inventory already Expanded to maximum size
+                    return;
+                }
+            }
+
+            if (slotType != SlotType.Inventory && slotType != SlotType.Bank)
+            {
+                _log.Warn("Invalid slot type tried to be expanded");
+                return;
+            }
+
+            //Remove 1 expansion scroll
+            RemoveItem(ExpansionScrollId, 1, taskType);
+
+            Owner.ChangeMoney(SlotType.Inventory, -price);
+
+            Owner.SendPacket(new SCInvenExpandedPacket(slotType, (byte)slots));
         }
-        public int GetFirstFreeSlot(SlotType type)
+
+        public void ClearInventory()
         {
-            int slot = -1;
-            if (type == SlotType.Inventory)
+            foreach (var item in Items)
             {
-                for (int i = 0; i < Owner.NumInventorySlots; i++)
-                {
-                    if (Items[i] == null)
-                    {
-                        slot = i;
-                        break;
-                    }
-                }
+                //Remove all non-null and non-teleport book items from inventory
+                if (item != null && item.TemplateId != 4045)
+                    RemoveItem(item, true, ItemTaskType.Gm);
             }
-            else if (type == SlotType.Bank)
-            {
-                for (int i = 0; i < Owner.NumBankSlots; i++)
-                {
-                    if (Items[i] == null)
-                    {
-                        slot = i;
-                        break;
-                    }
-                }
-            }
-
-            return slot;
-        }
-
-        public int GetFirstFreeSlot(SlotType type, int ignoreSlot)
-        {
-            int slot = -1;
-            if (type == SlotType.Inventory)
-            {
-                for (int i = 0; i < Owner.NumInventorySlots; i++)
-                {
-                    if (Items[i] == null && i != ignoreSlot)
-                    {
-                        slot = i;
-                        break;
-                    }
-                }
-            }
-            else if (type == SlotType.Bank)
-            {
-                for (int i = 0; i < Owner.NumBankSlots; i++)
-                {
-                    if (Items[i] == null && i != ignoreSlot)
-                    {
-                        slot = i;
-                        break;
-                    }
-                }
-            }
-
-            return slot;
         }
     }
 }

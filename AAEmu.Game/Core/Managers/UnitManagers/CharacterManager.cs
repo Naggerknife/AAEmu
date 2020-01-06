@@ -26,6 +26,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         private readonly Dictionary<byte, CharacterTemplate> _templates;
         private readonly Dictionary<byte, AbilityItems> _abilityItems;
         private readonly Dictionary<int, List<Expand>> _expands;
+        private readonly Dictionary<int, Expand> _inventoryExpands;
+        private readonly Dictionary<int, Expand> _bankExpands;
         private readonly Dictionary<uint, AppellationTemplate> _appellations;
         private readonly Dictionary<uint, ActabilityTemplate> _actabilities;
         private readonly Dictionary<int, ExpertLimit> _expertLimits;
@@ -36,6 +38,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             _templates = new Dictionary<byte, CharacterTemplate>();
             _abilityItems = new Dictionary<byte, AbilityItems>();
             _expands = new Dictionary<int, List<Expand>>();
+            _inventoryExpands = new Dictionary<int, Expand>();
+            _bankExpands = new Dictionary<int, Expand>();
             _appellations = new Dictionary<uint, AppellationTemplate>();
             _actabilities = new Dictionary<uint, ActabilityTemplate>();
             _expertLimits = new Dictionary<int, ExpertLimit>();
@@ -57,6 +61,16 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         public List<Expand> GetExpands(int step)
         {
             return _expands[step];
+        }
+
+        public Expand GetExpandForNextStep(SlotType slotType, int nextStep)
+        {
+            if (slotType == SlotType.Bank)
+            {
+                return _bankExpands[nextStep];
+            }
+
+            return _inventoryExpands[nextStep];
         }
 
         public ActabilityTemplate GetActability(uint id)
@@ -381,8 +395,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             Log.Info("Loaded {0} character templates", _templates.Count);
         }
 
-        public void Create(GameConnection connection, string name, byte race, byte gender, uint[] body,
-            UnitCustomModelParams customModel, byte ability1)
+        public void Create(GameConnection connection, string name, byte race, byte gender, uint[] body, UnitCustomModelParams customModel, byte ability1)
         {
             var nameValidationCode = NameManager.Instance.ValidationCharacterName(name);
             if (nameValidationCode == 0)
@@ -408,12 +421,17 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                 character.NumBankSlots = template.NumBankSlot;
                 character.Inventory = new Inventory(character);
                 character.Updated = DateTime.UtcNow;
-                character.Ability1 = (AbilityType) ability1;
-                character.Ability2 = AbilityType.None;
-                character.Ability3 = AbilityType.None;
+                character.SkillTreeOne = (AbilityType) ability1;
+                character.SkillTreeTwo = AbilityType.None;
+                character.SkillTreeThree = AbilityType.None;
                 character.ReturnDictrictId = template.ReturnDictrictId;
                 character.ResurrectionDictrictId = template.ResurrectionDictrictId;
                 character.Slots = new ActionSlot[85];
+                character.WeaponTypeBuffId = 0; //TODO: get from saved buffs
+                character.WeaponEquipSetBuffId = 0; //TODO: get from saved buffs
+                character.ArmorKindBuffId = 0; //TODO: get from saved buffs
+                character.ArmorGradeBuffId = 0; //TODO: get from saved buffs
+                character.ArmorSetBuffIds = new List<uint>();//TODO: get from saved buffs
                 for (var i = 0; i < character.Slots.Length; i++)
                     character.Slots[i] = new ActionSlot();
 
@@ -463,7 +481,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                     }
 
                 character.Abilities = new CharacterAbilities(character);
-                character.Abilities.SetAbility(character.Ability1, 0);
+                character.Abilities.SetAbility(character.SkillTreeOne, 0);
                 
                 character.Actability = new CharacterActability(character);
                 foreach (var (id, actabilityTemplate) in _actabilities)
@@ -480,9 +498,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                 slot = 1;
                 while (character.Slots[slot].Type != ActionSlotType.None)
                     slot++;
-                foreach (var skill in SkillManager.Instance.GetStartAbilitySkills(character.Ability1))
+                foreach (var skill in SkillManager.Instance.GetStartAbilitySkills(character.SkillTreeOne))
                 {
-                    character.Skills.AddSkill(skill, 1, false);
+                    character.Skills.AddSkill(skill.Id, false);
                     character.SetAction(slot, ActionSlotType.Skill, skill.Id);
                     slot++;
                 }
@@ -548,6 +566,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
             return result;
         }
+        
         private void SetEquipItemTemplate(Inventory inventory, uint templateId, EquipmentItemSlot slot, byte grade)
         {
             Item item = null;

@@ -1,6 +1,7 @@
 ﻿using System;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using NLog;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects
 {
@@ -14,10 +15,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             Skill skill,
             SkillObject skillObject,
             DateTime time,
-            int value1,
-            int value2,
-            int value3,
-            int value4);
+            int value1, int value2, int value3, int value4);
     }
     public class SpecialEffect : EffectTemplate
     {
@@ -38,10 +36,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             SkillObject skillObject,
             DateTime time)
         {
-            Log.Debug(
-                "SpecialEffect, Special: {0}, Value1: {1}, Value2: {2}, Value3: {3}, Value4: {4}",
-                SpecialEffectTypeId, Value1, Value2, Value3, Value4
-                );
+            //Log.Debug("SpecialEffect, Special: {0}, Value1: {1}, Value2: {2}, Value3: {3}, Value4: {4}", SpecialEffectTypeId, Value1, Value2, Value3, Value4);
 
             var classType = Type.GetType("AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects." + SpecialEffectTypeId);
             if (classType == null)

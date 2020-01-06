@@ -41,26 +41,28 @@ namespace AAEmu.Game.Models.Tasks.Skills
             foreach (var condition in _nextEvent.Event.Conditions)
             {
                 if (condition.Condition.Check(_caster, _casterCaster, _target, _targetCaster, _skillObject))
+                {
                     continue;
-
+                }
                 step.Flag = 0;
                 break;
             }
-
             var res = true;
             if (step.Flag != 0)
             {
                 foreach (var evnt in _nextEvent.Event.NextEvents)
+                {
                     res = res && Skill.BuildPlot(_caster, _casterCaster, _target, _targetCaster, _skillObject, evnt, step, _counter);
-
+                }
             }
             Skill.ParsePlot(_caster, _casterCaster, _target, _targetCaster, _skillObject, step);
             if (!res)
+            {
                 return;
-
-            _caster.BroadcastPacket(new SCPlotEndedPacket(Skill.TlId), true);
-            TlIdManager.Instance.ReleaseId(Skill.TlId);
-            Skill.TlId = 0;
+            }
+            _caster.BroadcastPacket(new SCPlotEndedPacket(_caster.TlId), true);
+            TlIdManager.Instance.ReleaseId(_caster.TlId);
+            _caster.TlId = 0;
         }
     }
 }

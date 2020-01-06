@@ -10,7 +10,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
         public bool NeedLaborPower { get; set; }
 
         public bool NeedPriest { get; set; }
-        // TODO 1.2 // public bool Penaltied { get; set; }
+        public bool Penaltied { get; set; }
 
         public override bool OnActionTime => false;
 

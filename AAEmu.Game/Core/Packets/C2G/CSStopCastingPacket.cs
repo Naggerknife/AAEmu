@@ -11,11 +11,11 @@ namespace AAEmu.Game.Core.Packets.C2G
 
         public override async void Read(PacketStream stream)
         {
-            var tl = stream.ReadUInt16(); // sid
-            stream.ReadUInt16(); // tl; pid
+            var sid = stream.ReadUInt16(); // sid tl
+            var pid = stream.ReadUInt16(); // pid tl
             var objId = stream.ReadBc();
 
-            if (Connection.ActiveChar.ObjId != objId || Connection.ActiveChar.SkillTask == null || Connection.ActiveChar.SkillTask.Skill.TlId != tl)
+            if (Connection.ActiveChar.ObjId != objId || Connection.ActiveChar.SkillTask == null || Connection.ActiveChar.TlId != sid || Connection.ActiveChar.TlIdPlot != pid)
             {
                 return;
             }

@@ -1,4 +1,4 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
 
@@ -22,6 +22,7 @@ namespace AAEmu.Game.Core.Packets.C2G
                     break;
                 case ActionSlotType.Item:
                 case ActionSlotType.Skill:
+                case ActionSlotType.Unk5:
                     // TODO убрать что бы найти что это ... case ActionSlotType.Unk5:
                     var actionId = stream.ReadUInt32();
                     Connection.ActiveChar.SetAction(slot, type, actionId);
@@ -29,6 +30,9 @@ namespace AAEmu.Game.Core.Packets.C2G
                 case ActionSlotType.Unk4:
                     var itemId = stream.ReadUInt64();
                     // TODO
+                    break;
+                case ActionSlotType.Unk3:
+                    _log.Error("UpdateActionSlot, Unknown packet type!");
                     break;
                 default:
                     _log.Error("UpdateActionSlot, Unknown packet type!");

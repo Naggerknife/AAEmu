@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Network.Game;
@@ -24,9 +24,9 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write((byte)_character.Race);
             stream.Write(_character.Hp * 100); // health TODO ?
             stream.Write(_character.Level);
-            stream.Write((byte)_character.Ability1);
-            stream.Write((byte)_character.Ability2);
-            stream.Write((byte)_character.Ability3);
+            stream.Write((byte)_character.SkillTreeOne);
+            stream.Write((byte)_character.SkillTreeTwo);
+            stream.Write((byte)_character.SkillTreeThree);
             stream.Write(Helpers.ConvertLongX(_character.Position.X));
             stream.Write(Helpers.ConvertLongY(_character.Position.Y));
             stream.Write(_character.Position.Z);

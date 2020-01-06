@@ -16,6 +16,7 @@ namespace AAEmu.Game.Core.Managers
         private static Logger _log = LogManager.GetCurrentClassLogger();
 
         private Dictionary<uint, SkillTemplate> _skills;
+        private Dictionary<uint, List<SkillModifier>> _skillModifiers;
         private Dictionary<uint, DefaultSkill> _defaultSkills;
         private List<uint> _commonSkills;
         private Dictionary<AbilityType, List<SkillTemplate>> _startAbilitySkills;
@@ -24,7 +25,6 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<string, Dictionary<uint, EffectTemplate>> _effects;
         private Dictionary<uint, List<uint>> _taggedBuffs;
         private Dictionary<uint, List<uint>> _skillTags;
-        private Dictionary<uint, List<SkillModifiers>> _skillModifiers;
 
         public SkillTemplate GetSkillTemplate(uint id)
         {
@@ -65,6 +65,9 @@ namespace AAEmu.Game.Core.Managers
             if (_types.ContainsKey(id))
             {
                 var type = _types[id];
+
+                _log.Info("Get Effect Template: type = {0}, id = {1}", type.Type, type.ActualId);
+
                 return _effects[type.Type][type.ActualId];
             }
             return null;
@@ -96,8 +99,8 @@ namespace AAEmu.Game.Core.Managers
                 return _passiveBuffs[id];
             return null;
         }
-
-        public List<SkillModifiers> GetModifiersByOwnerId(uint id)
+        
+        public List<SkillModifier> GetModifiersByOwnerId(uint id)
         {
             if (_skillModifiers.ContainsKey(id))
                 return _skillModifiers[id];
@@ -107,7 +110,7 @@ namespace AAEmu.Game.Core.Managers
         public void Load()
         {
             _skills = new Dictionary<uint, SkillTemplate>();
-            _skillModifiers = new Dictionary<uint, List<SkillModifiers>>();
+            _skillModifiers = new Dictionary<uint, List<SkillModifier>>();
             _defaultSkills = new Dictionary<uint, DefaultSkill>();
             _commonSkills = new List<uint>();
             _startAbilitySkills = new Dictionary<AbilityType, List<SkillTemplate>>();
@@ -258,7 +261,7 @@ namespace AAEmu.Game.Core.Managers
                                 reader.GetBoolean("level_rule_no_consideration", true);
                             template.UseWeaponCooldownTime = reader.GetBoolean("use_weapon_cooldown_time", true);
                             template.CombatDiceId = reader.GetInt32("combat_dice_id");
-                            template.CustonGcd = reader.GetInt32("custom_gcd");
+                            template.CustomGcd = reader.GetInt32("custom_gcd");
                             template.CancelOngoingBuffs = reader.GetBoolean("cancel_ongoing_buffs", true);
                             template.SourceCannotUseWhileWalk =
                                 reader.GetBoolean("source_cannot_use_while_walk", true);
@@ -635,7 +638,7 @@ namespace AAEmu.Game.Core.Managers
                     {
                         while (reader.Read())
                         {
-                            var template = new SkillModifiers
+                            var template = new SkillModifier
                             {
                                 Id = reader.GetUInt32("id"),
                                 OwnerId = reader.GetUInt32("owner_id"),
@@ -649,7 +652,7 @@ namespace AAEmu.Game.Core.Managers
                             };
 
                             if (!_skillModifiers.ContainsKey(template.OwnerId))
-                                _skillModifiers.Add(template.OwnerId, new List<SkillModifiers>());
+                                _skillModifiers.Add(template.OwnerId, new List<SkillModifier>());
                             _skillModifiers[template.OwnerId].Add(template);
                         }
                     }
@@ -1070,7 +1073,7 @@ namespace AAEmu.Game.Core.Managers
                             template.NeedMoney = reader.GetBoolean("need_money", true);
                             template.NeedLaborPower = reader.GetBoolean("need_labor_power", true);
                             template.NeedPriest = reader.GetBoolean("need_priest", true);
-                            // TODO 1.2 // template.Penaltied = reader.GetBoolean("penaltied", true);
+                            template.Penaltied = reader.GetBoolean("penaltied", true);
                             _effects["RecoverExpEffect"].Add(template.Id, template);
                         }
                     }
@@ -1168,7 +1171,7 @@ namespace AAEmu.Game.Core.Managers
                             template.LifeTime = reader.GetFloat("life_time");
                             template.DespawnOnCreatorDeath = reader.GetBoolean("despawn_on_creator_death", true);
                             template.UseSummoneerAggroTarget = reader.GetBoolean("use_summoner_aggro_target", true);
-                            // TODO 1.2 // template.MateStateId = reader.GetUInt32("mate_state_id", 0);
+                            template.MateStateId = reader.GetUInt32("mate_state_id", 0);
                             _effects["SpawnEffect"].Add(template.Id, template);
                         }
                     }

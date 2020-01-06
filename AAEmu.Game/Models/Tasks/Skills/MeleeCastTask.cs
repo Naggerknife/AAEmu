@@ -1,4 +1,5 @@
-﻿using AAEmu.Game.Models.Game.Skills;
+﻿using AAEmu.Game.Core.Managers.Id;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Tasks.Skills
@@ -23,6 +24,7 @@ namespace AAEmu.Game.Models.Tasks.Skills
 
         public override void Execute()
         {
+            _caster.TlId = (ushort)TlIdManager.Instance.GetNextId();
             Skill.Cast(_caster, _casterCaster, _target, _targetCaster, _skillObject);
         }
     }

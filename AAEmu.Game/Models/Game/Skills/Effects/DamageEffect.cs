@@ -2,6 +2,7 @@
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
@@ -145,17 +146,23 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             max = (int)(max * Multiplier);
             var value = Rand.Next(min, max);
             
-            trg.ReduceCurrentHp(caster, value);
-            caster.SummarizeDamage += value;
-            trg.BroadcastPacket(new SCUnitDamagedPacket(castObj, casterObj, caster.ObjId, target.ObjId, value), true);
+            caster.SummarizeDamage[0] += value;
+
+            if (caster is Character chr1) // Character is in battle
+            {
+                chr1.IsInBattle = true;
+            }
+            if (target is Character chr2)
+            {
+                chr2.IsInBattle = true;
+            }
+
             if (trg is Npc)
             {
                 trg.BroadcastPacket(new SCAiAggroPacket(trg.ObjId, 1, caster.ObjId, caster.SummarizeDamage), true);
             }
             if (trg is Npc npc && npc.CurrentTarget != caster)
             {
-                //npc.BroadcastPacket(new SCAiAggroPacket(npc.ObjId, 1, caster.ObjId), true);
-
                 if (npc.Patrol == null || npc.Patrol.PauseAuto(npc))
                 {
                     npc.CurrentTarget = caster;
@@ -168,6 +175,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                     TaskManager.Instance.Schedule(new UnitMove(new Track(), npc), TimeSpan.FromMilliseconds(100));
                 }
             }
+
+            trg.BroadcastPacket(new SCUnitDamagedPacket(castObj, casterObj, caster.ObjId, target.ObjId, value), true);
+            trg.ReduceCurrentHp(caster, value);
         }
     }
 }

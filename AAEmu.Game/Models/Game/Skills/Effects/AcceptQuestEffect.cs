@@ -18,7 +18,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             Log.Debug("AcceptQuestEffect");
 
             if (target is Character character)
+            {
                 character.Quests.Add(QuestId);
+            }
         }
     }
 }

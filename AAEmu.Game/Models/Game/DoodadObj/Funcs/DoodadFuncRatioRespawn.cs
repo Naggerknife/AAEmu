@@ -36,8 +36,10 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                 // NPC spawn
                 var npcSpawner = new NpcSpawner
                 {
-                    Id = 0, RespawnTime = 0, 
-                    UnitId = 7503, 
+                    Id = 0,
+                    RespawnTime = 0,
+                    DespawnTime = 1,  // minutes
+                    UnitId = 7503,
                     Position = character.Position.Clone()
                 };
 
@@ -54,6 +56,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                 var npc = npcSpawner.Spawn(0);
 
                 npc.Respawn = DateTime.MinValue; // not appear after death
+                npc.Despawn = DateTime.Now.AddMinutes(1); // убираем через некоторое время
 
                 npc.IsAutoAttack = true;
 

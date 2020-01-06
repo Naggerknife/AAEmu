@@ -98,7 +98,7 @@ namespace AAEmu.Game.Core.Managers.World
                             template.PirateDesperado = reader.GetBoolean("pirate_desperado", true);
                             template.FishingSeaLootPackId = reader.GetUInt32("fishing_sea_loot_pack_id", 0);
                             template.FishingLandLootPackId = reader.GetUInt32("fishing_land_loot_pack_id", 0);
-                            // TODO 1.2 // template.BuffId = reader.GetUInt32("buff_id", 0);
+                            template.BuffId = reader.GetUInt32("buff_id", 0);
                             _groups.Add(template.Id, template);
                         }
                     }
@@ -134,7 +134,7 @@ namespace AAEmu.Game.Core.Managers.World
                                 template.NuiaReturnPointId = reader.GetUInt32("nuia_return_point_id", 0);
                                 template.HariharaReturnPointId = reader.GetUInt32("harihara_return_point_id", 0);
                                 template.WarTowerDefId = reader.GetUInt32("war_tower_def_id", 0);
-                                // TODO 1.2 // template.PeaceTowerDefId = reader.GetUInt32("peace_tower_def_id", 0);
+                                template.PeaceTowerDefId = reader.GetUInt32("peace_tower_def_id", 0);
 
                                 _groups[zoneGroupId].Conflict = template;
                                 _conflicts.Add(zoneGroupId, template);
@@ -157,7 +157,7 @@ namespace AAEmu.Game.Core.Managers.World
                             template.Id = reader.GetUInt32("id");
                             template.ZoneGroupId = reader.GetUInt32("zone_group_id");
                             template.TagId = reader.GetUInt32("tag_id");
-                            // TODO 1.2 // template.BannedPeriodsId = reader.GetUInt32("banned_periods_id");
+                            template.BannedPeriodsId = reader.GetUInt32("banned_periods_id");
                             _groupBannedTags.Add(template.Id, template);
                         }
                     }

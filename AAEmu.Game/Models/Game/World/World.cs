@@ -1,4 +1,4 @@
-using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Game.Core.Managers.World;
 
 namespace AAEmu.Game.Models.Game.World
 {
@@ -19,21 +19,23 @@ namespace AAEmu.Game.Models.Game.World
 
         public float GetHeight(float x, float y)
         {
-            var sx = (int) (x / 2);
-            var sy = (int) (y / 2);
-            var height = (float) (HeightMaps[sx, sy] / HeightMaxCoefficient);
+            var sx = (int)(x / 2);
+            var sy = (int)(y / 2);
+            var height = (float)(HeightMaps[sx, sy] / HeightMaxCoefficient);
             return height;
         }
 
         public Region GetRegion(int x, int y)
         {
-            if (ValidRegion(x, y))
-                if (Regions[x, y] == null)
-                    return Regions[x, y] = new Region(Id, x, y);
-                else
-                    return Regions[x, y];
-
-            return null;
+            if (!ValidRegion(x, y))
+            {
+                return null;
+            }
+            if (Regions[x, y] == null)
+            {
+                return Regions[x, y] = new Region(Id, x, y);
+            }
+            return Regions[x, y];
         }
 
         public bool ValidRegion(int x, int y)

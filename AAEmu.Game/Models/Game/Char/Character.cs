@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
-using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.DoodadObj;
-using AAEmu.Game.Models.Game.Expeditions;
-using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
@@ -19,7 +17,9 @@ using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Utils.DB;
+
 using MySql.Data.MySqlClient;
+
 using NLog;
 
 namespace AAEmu.Game.Models.Game.Char
@@ -47,12 +47,12 @@ namespace AAEmu.Game.Models.Game.Char
     public sealed class Character : Unit
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
-
         private Dictionary<ushort, string> _options;
+        private bool _inParty;
+        private bool _isOnline;
 
         //public GameConnection Connection { get; set; }
         public List<IDisposable> Subscribers { get; set; }
-
         public uint Id { get; set; }
         public uint AccountId { get; set; }
         public Race Race { get; set; }
@@ -60,9 +60,9 @@ namespace AAEmu.Game.Models.Game.Char
         public short LaborPower { get; set; }
         public DateTime LaborPowerModified { get; set; }
         public int ConsumedLaborPower { get; set; }
-        public AbilityType Ability1 { get; set; }
-        public AbilityType Ability2 { get; set; }
-        public AbilityType Ability3 { get; set; }
+        public AbilityType SkillTreeOne { get; set; }
+        public AbilityType SkillTreeTwo { get; set; }
+        public AbilityType SkillTreeThree { get; set; }
         public string FactionName { get; set; }
         public uint Family { get; set; }
         public short DeadCount { get; set; }
@@ -85,24 +85,19 @@ namespace AAEmu.Game.Models.Game.Char
         public int PrevPoint { get; set; }
         public int Point { get; set; }
         public int Gift { get; set; }
-        public int Expirience { get; set; }
+        public int Experience { get; set; }
         public int RecoverableExp { get; set; }
         public DateTime Updated { get; set; }
-
         public uint ReturnDictrictId { get; set; }
         public uint ResurrectionDictrictId { get; set; }
-
         public override UnitCustomModelParams ModelParams { get; set; }
         public override float Scale => 1f;
         public override byte RaceGender => (byte)(16 * (byte)Gender + (byte)Race);
-
         public CharacterVisualOptions VisualOptions { get; set; }
-
         public ActionSlot[] Slots { get; set; }
         public Inventory Inventory { get; set; }
         public byte NumInventorySlots { get; set; }
         public short NumBankSlots { get; set; }
-
         public Item[] BuyBack { get; set; }
         public BondDoodad Bonding { get; set; }
         public CharacterQuests Quests { get; set; }
@@ -113,19 +108,18 @@ namespace AAEmu.Game.Models.Game.Char
         public CharacterFriends Friends { get; set; }
         public CharacterBlocked Blocked { get; set; }
         public CharacterMates Mates { get; set; }
-
         public byte ExpandedExpert { get; set; }
         public CharacterActability Actability { get; set; }
-
         public CharacterSkills Skills { get; set; }
         public CharacterCraft Craft { get; set; }
-
-        public int AccessLevel { get; set;}
+        public int AccessLevel { get; set; }
         public Point LocalPingPosition { get; set; } // added as a GM command helper
         public Item Item { get; set; }  // Item который используется персонажем в каких либо действиях
-
-        private bool _inParty;
-        private bool _isOnline;
+        public uint WeaponTypeBuffId { get; set; }
+        public uint WeaponEquipSetBuffId { get; set; }
+        public uint ArmorKindBuffId { get; set; }
+        public uint ArmorGradeBuffId { get; set; }
+        public List<uint> ArmorSetBuffIds { get; set; }
 
         public bool InParty
         {
@@ -147,7 +141,7 @@ namespace AAEmu.Game.Models.Game.Char
                 if (_isOnline == value) return;
                 // TODO - GUILD STATUS CHANGE
                 FriendMananger.Instance.SendStatusChange(this, true, value);
-                if(!value) TeamManager.Instance.SetOffline(this);
+                if (!value) TeamManager.Instance.SetOffline(this);
                 _isOnline = value;
             }
         }
@@ -159,7 +153,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Str);
-                var parameters = new Dictionary<string, double> {["level"] = Level};
+                var parameters = new Dictionary<string, double> { ["level"] = Level };
                 var result = formula.Evaluate(parameters);
                 var res = (int)result;
                 foreach (var item in Inventory.Equip)
@@ -182,7 +176,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Dex);
-                var parameters = new Dictionary<string, double> {["level"] = Level};
+                var parameters = new Dictionary<string, double> { ["level"] = Level };
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var item in Inventory.Equip)
                     if (item is EquipItem equip)
@@ -204,7 +198,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Sta);
-                var parameters = new Dictionary<string, double> {["level"] = Level};
+                var parameters = new Dictionary<string, double> { ["level"] = Level };
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var item in Inventory.Equip)
                     if (item is EquipItem equip)
@@ -226,7 +220,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Int);
-                var parameters = new Dictionary<string, double> {["level"] = Level};
+                var parameters = new Dictionary<string, double> { ["level"] = Level };
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var item in Inventory.Equip)
                     if (item is EquipItem equip)
@@ -248,7 +242,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Spi);
-                var parameters = new Dictionary<string, double> {["level"] = Level};
+                var parameters = new Dictionary<string, double> { ["level"] = Level };
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var item in Inventory.Equip)
                     if (item is EquipItem equip)
@@ -270,7 +264,7 @@ namespace AAEmu.Game.Models.Game.Char
             get
             {
                 var formula = FormulaManager.Instance.GetUnitFormula(UnitOwnerType.Character, UnitFormulaKind.Fai);
-                var parameters = new Dictionary<string, double> {["level"] = Level};
+                var parameters = new Dictionary<string, double> { ["level"] = Level };
                 var res = (int)formula.Evaluate(parameters);
                 foreach (var bonus in GetBonuses(UnitAttribute.Fai))
                 {
@@ -721,26 +715,36 @@ namespace AAEmu.Game.Models.Game.Char
             Subscribers = new List<IDisposable>();
         }
 
-        public void AddExp(int exp, bool shouldAddAbilityExp)
+        public void AddExp(int exp, bool shouldAddSkillTreeExp)
         {
             if (exp == 0)
                 return;
-            Expirience += exp;
-            if (shouldAddAbilityExp)
-                Abilities.AddActiveExp(exp); // TODO ... or all?
-            SendPacket(new SCExpChangedPacket(ObjId, exp, shouldAddAbilityExp));
+
+            if (Experience + exp > ExperienceManager.Instance.GetExpForLevel((byte)ExperienceManager.Instance.maxLevel))
+            {
+                Experience = ExperienceManager.Instance.GetExpForLevel((byte)ExperienceManager.Instance.maxLevel);
+            }
+            else
+            {
+                Experience += exp;
+            }
+
+            if (shouldAddSkillTreeExp)
+                Abilities.AddActiveExp(exp);
+
+            SendPacket(new SCExpChangedPacket(ObjId, exp, shouldAddSkillTreeExp));
             CheckLevelUp();
         }
 
         public void CheckLevelUp()
         {
-            var needExp = ExpirienceManager.Instance.GetExpForLevel((byte)(Level + 1));
+            var needExp = ExperienceManager.Instance.GetExpForLevel((byte)(Level + 1));
             var change = false;
-            while (Expirience >= needExp)
+            while (Experience >= needExp && Level < ExperienceManager.Instance.maxLevel)
             {
                 change = true;
                 Level++;
-                needExp = ExpirienceManager.Instance.GetExpForLevel((byte)(Level + 1));
+                needExp = ExperienceManager.Instance.GetExpForLevel((byte)(Level + 1));
             }
 
             if (change)
@@ -754,14 +758,14 @@ namespace AAEmu.Game.Models.Game.Char
 
         public void CheckExp()
         {
-            var needExp = ExpirienceManager.Instance.GetExpForLevel(Level);
-            if (Expirience < needExp)
-                Expirience = needExp;
-            needExp = ExpirienceManager.Instance.GetExpForLevel((byte)(Level + 1));
-            while (Expirience >= needExp)
+            var needExp = ExperienceManager.Instance.GetExpForLevel(Level);
+            if (Experience < needExp)
+                Experience = needExp;
+            needExp = ExperienceManager.Instance.GetExpForLevel((byte)(Level + 1));
+            while (Experience >= needExp)
             {
                 Level++;
-                needExp = ExpirienceManager.Instance.GetExpForLevel((byte)(Level + 1));
+                needExp = ExperienceManager.Instance.GetExpForLevel((byte)(Level + 1));
             }
         }
 
@@ -802,6 +806,14 @@ namespace AAEmu.Game.Models.Game.Char
                     else
                         _log.Warn("Not Money in Bank.");
 
+                    break;
+                case SlotType.None:
+                    break;
+                case SlotType.Equipment:
+                    break;
+                case SlotType.Trade:
+                    break;
+                case SlotType.Mail:
                     break;
                 default:
                     _log.Warn("Change Money!");
@@ -914,16 +926,16 @@ namespace AAEmu.Game.Models.Game.Char
                         character.Race = (Race)reader.GetByte("race");
                         character.Gender = (Gender)reader.GetByte("gender");
                         character.Level = reader.GetByte("level");
-                        character.Expirience = reader.GetInt32("expirience");
+                        character.Experience = reader.GetInt32("expirience");
                         character.RecoverableExp = reader.GetInt32("recoverable_exp");
                         character.Hp = reader.GetInt32("hp");
                         character.Mp = reader.GetInt32("mp");
                         character.LaborPower = reader.GetInt16("labor_power");
                         character.LaborPowerModified = reader.GetDateTime("labor_power_modified");
                         character.ConsumedLaborPower = reader.GetInt32("consumed_lp");
-                        character.Ability1 = (AbilityType)reader.GetByte("ability1");
-                        character.Ability2 = (AbilityType)reader.GetByte("ability2");
-                        character.Ability3 = (AbilityType)reader.GetByte("ability3");
+                        character.SkillTreeOne = (AbilityType)reader.GetByte("ability1");
+                        character.SkillTreeTwo = (AbilityType)reader.GetByte("ability2");
+                        character.SkillTreeThree = (AbilityType)reader.GetByte("ability3");
                         character.Position.WorldId = reader.GetUInt32("world_id");
                         character.Position.ZoneId = reader.GetUInt32("zone_id");
                         character.Position.X = reader.GetFloat("x");
@@ -960,6 +972,11 @@ namespace AAEmu.Game.Models.Game.Char
                         character.NumBankSlots = reader.GetInt16("num_bank_slot");
                         character.ExpandedExpert = reader.GetByte("expanded_expert");
                         character.Updated = reader.GetDateTime("updated_at");
+                        character.WeaponTypeBuffId = 0; //TODO: get from saved buffs
+                        character.WeaponEquipSetBuffId = 0; //TODO: get from saved buffs
+                        character.ArmorKindBuffId = 0; //TODO: get from saved buffs
+                        character.ArmorGradeBuffId = 0; //TODO: get from saved buffs
+                        character.ArmorSetBuffIds = new List<uint>(); //TODO: get from saved buffs
 
                         character.Inventory = new Inventory(character);
 
@@ -1019,16 +1036,16 @@ namespace AAEmu.Game.Models.Game.Char
                         character.Race = (Race)reader.GetByte("race");
                         character.Gender = (Gender)reader.GetByte("gender");
                         character.Level = reader.GetByte("level");
-                        character.Expirience = reader.GetInt32("expirience");
+                        character.Experience = reader.GetInt32("expirience");
                         character.RecoverableExp = reader.GetInt32("recoverable_exp");
                         character.Hp = reader.GetInt32("hp");
                         character.Mp = reader.GetInt32("mp");
                         character.LaborPower = reader.GetInt16("labor_power");
                         character.LaborPowerModified = reader.GetDateTime("labor_power_modified");
                         character.ConsumedLaborPower = reader.GetInt32("consumed_lp");
-                        character.Ability1 = (AbilityType)reader.GetByte("ability1");
-                        character.Ability2 = (AbilityType)reader.GetByte("ability2");
-                        character.Ability3 = (AbilityType)reader.GetByte("ability3");
+                        character.SkillTreeOne = (AbilityType)reader.GetByte("ability1");
+                        character.SkillTreeTwo = (AbilityType)reader.GetByte("ability2");
+                        character.SkillTreeThree = (AbilityType)reader.GetByte("ability3");
                         character.Position.WorldId = reader.GetUInt32("world_id");
                         character.Position.ZoneId = reader.GetUInt32("zone_id");
                         character.Position.X = reader.GetFloat("x");
@@ -1117,7 +1134,7 @@ namespace AAEmu.Game.Models.Game.Char
                 Mates = new CharacterMates(this);
                 Mates.Load(connection);
 
-                
+
 
                 using (var command = connection.CreateCommand())
                 {
@@ -1184,16 +1201,16 @@ namespace AAEmu.Game.Models.Game.Char
                             command.Parameters.AddWithValue("@gender", (byte)Gender);
                             command.Parameters.AddWithValue("@unit_model_params", unitModelParams);
                             command.Parameters.AddWithValue("@level", Level);
-                            command.Parameters.AddWithValue("@expirience", Expirience);
+                            command.Parameters.AddWithValue("@expirience", Experience);
                             command.Parameters.AddWithValue("@recoverable_exp", RecoverableExp);
                             command.Parameters.AddWithValue("@hp", Hp);
                             command.Parameters.AddWithValue("@mp", Mp);
                             command.Parameters.AddWithValue("@labor_power", LaborPower);
                             command.Parameters.AddWithValue("@labor_power_modified", LaborPowerModified);
                             command.Parameters.AddWithValue("@consumed_lp", ConsumedLaborPower);
-                            command.Parameters.AddWithValue("@ability1", (byte)Ability1);
-                            command.Parameters.AddWithValue("@ability2", (byte)Ability2);
-                            command.Parameters.AddWithValue("@ability3", (byte)Ability3);
+                            command.Parameters.AddWithValue("@ability1", (byte)SkillTreeOne);
+                            command.Parameters.AddWithValue("@ability2", (byte)SkillTreeTwo);
+                            command.Parameters.AddWithValue("@ability3", (byte)SkillTreeThree);
                             command.Parameters.AddWithValue("@world_id", WorldPosition?.WorldId ?? Position.WorldId);
                             command.Parameters.AddWithValue("@zone_id", WorldPosition?.ZoneId ?? Position.ZoneId);
                             command.Parameters.AddWithValue("@x", WorldPosition?.X ?? Position.X);
@@ -1313,7 +1330,7 @@ namespace AAEmu.Game.Models.Game.Char
                 character.SendPacket(new SCTargetChangedPacket(character.ObjId, 0));
             }
 
-            character.SendPacket(new SCUnitsRemovedPacket(new[] {ObjId}));
+            character.SendPacket(new SCUnitsRemovedPacket(new[] { ObjId }));
         }
 
         public PacketStream Write(PacketStream stream)
@@ -1339,9 +1356,9 @@ namespace AAEmu.Game.Models.Game.Char
                     stream.Write(item);
             }
 
-            stream.Write((byte)Ability1);
-            stream.Write((byte)Ability2);
-            stream.Write((byte)Ability3);
+            stream.Write((byte)SkillTreeOne);
+            stream.Write((byte)SkillTreeTwo);
+            stream.Write((byte)SkillTreeThree);
 
             stream.Write(Helpers.ConvertLongX(Position.X));
             stream.Write(Helpers.ConvertLongY(Position.Y));

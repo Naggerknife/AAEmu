@@ -39,6 +39,9 @@ namespace AAEmu.Game.Models.Game.Skills
                 case SkillObjectType.ItemGradeEnchantingSupport:
                     obj = new SkillObjectItemGradeEnchantingSupport();
                     break;
+                case SkillObjectType.None:
+                    obj = new SkillObject(); // TODO
+                    break;
                 default:
                     obj = new SkillObject();
                     break;

@@ -1,3 +1,4 @@
+﻿using System;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
@@ -57,6 +58,32 @@ namespace AAEmu.Game.Core.Packets.C2G
                     WorldManager.Instance.BroadcastPacketToNation(
                         new SCChatMessagePacket(type, Connection.ActiveChar, message, ability, languageType), Connection.ActiveChar.Race);
                     break;
+                case ChatType.Whispered:
+                    break;
+                case ChatType.System:
+                    break;
+                case ChatType.Notice:
+                    break;
+                case ChatType.Trade:
+                    break;
+                case ChatType.GroupFind:
+                    break;
+                case ChatType.Party:
+                    break;
+                case ChatType.Raid:
+                    break;
+                case ChatType.System2:
+                    break;
+                case ChatType.Family:
+                    break;
+                case ChatType.RaidLeader:
+                    break;
+                case ChatType.Judge:
+                    break;
+                case ChatType.User:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }

@@ -1,4 +1,4 @@
-namespace AAEmu.Game.Models.Game.World.Zones
+﻿namespace AAEmu.Game.Models.Game.World.Zones
 {
     public class ZoneConflict
     {
@@ -16,7 +16,7 @@ namespace AAEmu.Game.Models.Game.World.Zones
         public uint NuiaReturnPointId { get; set; }
         public uint HariharaReturnPointId { get; set; }
         public uint WarTowerDefId { get; set; }
-        // TODO 1.2 // public uint PeaceTowerDefId { get; set; }
+        public uint PeaceTowerDefId { get; set; }
 
         public ZoneConflict(ZoneGroup owner)
         {

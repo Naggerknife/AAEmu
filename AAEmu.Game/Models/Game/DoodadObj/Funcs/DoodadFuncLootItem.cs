@@ -3,6 +3,7 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
@@ -29,8 +30,10 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
             var count = Rand.Next(CountMin, CountMax);
 
             //TODO: Buffer
-            var item = ItemManager.Instance.Create(ItemId, count, 0);
-            character.Inventory.AddExistingItem(item, true, SlotType.Inventory, Items.Actions.ItemTaskType.Loot);
+            //var item = ItemManager.Instance.Create(ItemId, count, 0);
+            //character.Inventory.AddExistingItem(item, true, SlotType.Inventory, ItemTaskType.Loot);
+            //character.Inventory.AddExistingItem(item, ItemTaskType.Loot);
+            character.Inventory.AddNewItem(ItemId, count, 0, ItemTaskType.Loot);
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -428,7 +428,7 @@ namespace AAEmu.Game.Core.Managers
             member.Z = character.Position.Z;
             member.ZoneId = (int)character.Position.ZoneId;
             member.Abilities = new[]
-                {(byte)character.Ability1, (byte)character.Ability2, (byte)character.Ability3};
+                {(byte)character.SkillTreeOne, (byte)character.SkillTreeTwo, (byte)character.SkillTreeThree};
             member.ExpeditionId = expedition.Id;
             member.CharacterId = character.Id;
 

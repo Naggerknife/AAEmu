@@ -2,7 +2,9 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Error;
+using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Core.Packets.C2G
 {
@@ -15,6 +17,7 @@ namespace AAEmu.Game.Core.Packets.C2G
         public override void Read(PacketStream stream)
         {
             Skill skill;
+            Item item;
             var skillId = stream.ReadUInt32();
 
             var skillCasterType = stream.ReadByte(); // who applies
@@ -34,22 +37,28 @@ namespace AAEmu.Game.Core.Packets.C2G
 
             if (skillCaster is SkillItem)
             {
-                var item = Connection.ActiveChar.Inventory.GetItem(((SkillItem)skillCaster).ItemId);
+                item = Connection.ActiveChar.Inventory.GetItem(((SkillItem)skillCaster).ItemId);
                 if (item == null || skillId != item.Template.UseSkillId)
                 {
                     Connection.ActiveChar.SendErrorMessage(ErrorMessageType.FailedToUseItem);
                     return;
                 }
                 Connection.ActiveChar.Quests.OnItemUse(item);
+                Connection.ActiveChar.Item = item; // Item который используется персонажем в каких либо действиях
                 skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
             }
             else if (SkillManager.Instance.IsDefaultSkill(skillId) || SkillManager.Instance.IsCommonSkill(skillId))
             {
-                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId)); // TODO переделать...
             }
             else if (Connection.ActiveChar.Skills.Skills.ContainsKey(skillId))
             {
                 skill = Connection.ActiveChar.Skills.Skills[skillId];
+            }
+            else if (skillId > 0 && Connection.ActiveChar.Skills.IsDerivitiveSkill(skillId))
+            {
+                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+                //skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
             else
             {
@@ -57,8 +66,7 @@ namespace AAEmu.Game.Core.Packets.C2G
                 Connection.ActiveChar.SendErrorMessage(ErrorMessageType.UnknownSkill);
                 return;
             }
-
-            skill.Start(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
+            skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
         }
     }
 }

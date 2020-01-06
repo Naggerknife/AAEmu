@@ -146,6 +146,10 @@ namespace AAEmu.Game.Models.Game.Units
 
         public void AddEffect(Effect effect)
         {
+            // HACKFIX
+            if (effect.Template == null)
+                return;
+                
             lock (_lock)
             {
                 var owner = GetOwner();
@@ -163,6 +167,12 @@ namespace AAEmu.Game.Models.Game.Units
                 {
                     effect.StartTime = DateTime.Now;
                     effect.EndTime = effect.StartTime.AddMilliseconds(effect.Duration);
+                }
+
+                // Special case for fear, which is negative somehow ??
+                if (effect.Duration < 0)
+                {
+                    effect.EndTime = effect.StartTime.AddMilliseconds(-effect.Duration);
                 }
 
                 switch (effect.Template)
@@ -192,6 +202,10 @@ namespace AAEmu.Game.Models.Game.Units
                 }
 
                 _effects.Add(effect);
+                
+                if (effect.Template.BuffId > 0)
+                    owner.Modifiers.AddModifiers(effect.Template.BuffId);
+                
                 if (effect.Duration > 0)
                     effect.SetInUse(true, false);
                 else

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Utils.DB;
@@ -6,11 +6,12 @@ using NLog;
 
 namespace AAEmu.Game.Core.Managers
 {
-    public class ExpirienceManager : Singleton<ExpirienceManager>
+    public class ExperienceManager : Singleton<ExperienceManager>
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
 
         private Dictionary<byte, ExpirienceLevelTemplate> _levels;
+        public uint maxLevel = 55;
 
         public int GetExpForLevel(byte level, bool mate = false)
         {
@@ -26,6 +27,15 @@ namespace AAEmu.Game.Core.Managers
             for (var i = 1; i <= level; i++)
                 points += _levels[level].SkillPoints;
             return points;
+        }
+
+        public int GetLevelFromExp(int exp)
+        {
+            for (var i = 1; i <= 55; i++)
+                if (_levels[(byte)i].TotalExp <= exp && exp < _levels[(byte)(i + 1)].TotalExp)
+                    return i + 1;
+
+            return 1;
         }
 
         public void Load()
@@ -53,7 +63,7 @@ namespace AAEmu.Game.Core.Managers
                     }
                 }
 
-                _log.Info("Expirience data loaded");
+                _log.Info("Experience data loaded");
             }
         }
     }

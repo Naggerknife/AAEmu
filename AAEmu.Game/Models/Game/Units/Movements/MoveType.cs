@@ -1,4 +1,4 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 
 namespace AAEmu.Game.Models.Game.Units.Movements
 {
@@ -72,6 +72,8 @@ namespace AAEmu.Game.Models.Game.Units.Movements
                     break;
                 case MoveTypeEnum.Transfer:
                     // TODO ...
+                    break;
+                case MoveTypeEnum.Default:
                     break;
                 default:
                     mType = new DefaultMoveType();
