@@ -578,6 +578,8 @@ namespace AAEmu.Game.Models.Game.Skills
                     }
                 }
                 ParsePlot(caster, casterType, target, targetType, skillObject, caster.Step);
+                if (!res)
+                    return;
                 StopPlotEvent(caster);
                 Cast(caster, casterType, target, targetType, skillObject);
             }
@@ -602,7 +604,7 @@ namespace AAEmu.Game.Models.Game.Skills
                 else
                 {
                     // Instant Cast Skill
-                    caster.BroadcastPacket(new SCSkillStartedPacket(Id, caster.TlId, casterType, targetType, this, skillObject), true);
+                    //caster.BroadcastPacket(new SCSkillStartedPacket(Id, caster.TlId, casterType, targetType, this, skillObject), true);
                     Cast(caster, casterType, target, targetType, skillObject);
                 }
             }
@@ -821,7 +823,7 @@ namespace AAEmu.Game.Models.Game.Skills
             {
                 caster.Effects.RemoveEffect(Template.ChannelingBuffId, Template.Id);
             }
-            if (Template.ToggleBuffId != 0)
+            if (Template.ToggleBuffId != 0) // здесь делаем Баффы
             {
                 var buff = SkillManager.Instance.GetBuffTemplate(Template.ToggleBuffId);
                 buff?.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, caster.TlId), this, skillObject, DateTime.Now);

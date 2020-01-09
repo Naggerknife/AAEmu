@@ -37,8 +37,8 @@ namespace AAEmu.Game.Models.Game.Char
         {
             Owner = owner;
             Equip = new Item[28];
-            Items = new Item[MaxExpandCapacity];
-            Bank = new Item[MaxExpandCapacity];
+            Items = new Item[Owner.NumInventorySlots];
+            Bank = new Item[Owner.NumBankSlots];
             _removedItems = new List<ulong>();
         }
 
