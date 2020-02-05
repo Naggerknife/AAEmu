@@ -65,7 +65,6 @@ namespace AAEmu.Game.Models.Game.Units
         public bool IsAutoAttack { get; set; }
         public uint SkillId { get; set; }
         public ushort TlId { get; set; }
-        public ushort TlIdPlot { get; set; }
         public PlotStep Step { get; set; }
         public GameConnection Connection { get; set; }
         public Dictionary<uint, DateTime> Cooldowns { get; set; }
@@ -186,9 +185,9 @@ namespace AAEmu.Game.Models.Game.Units
 
             AutoAttackTask = null;
             IsAutoAttack = false; // turned off auto attack
-            BroadcastPacket(new SCSkillEndedPacket(TlId), true);
-            BroadcastPacket(new SCSkillStoppedPacket(ObjId, SkillId), true);
-            TlIdManager.Instance.ReleaseId(TlId);
+            //BroadcastPacket(new SCSkillEndedPacket(TlId), true);
+            //BroadcastPacket(new SCSkillStoppedPacket(ObjId, SkillId), true);
+            //TlIdManager.Instance.ReleaseId(TlId);
         }
 
 

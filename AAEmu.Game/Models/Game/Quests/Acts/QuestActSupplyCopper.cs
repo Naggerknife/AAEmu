@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Quests.Templates;
 using AAEmu.Game.Models.Game.Char;
@@ -16,7 +16,7 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
 
             character.Money += Amount;
             character.SendPacket(
-                new SCItemTaskSuccessPacket(ItemTaskType.QuestComplete, new List<ItemTask> {new MoneyChange(Amount)}, new List<ulong>())
+                new SCItemTaskSuccessPacket(ItemTaskType.QuestComplete, new List<ItemTask> { new MoneyChange(Amount) }, new List<ulong>())
             );
 
             return true;

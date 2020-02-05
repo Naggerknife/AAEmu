@@ -9,6 +9,7 @@ namespace AAEmu.Game.Models.Tasks.Skills
 {
     public class PlotTask : SkillTask
     {
+        private readonly Skill _skill;
         private readonly Unit _caster;
         private readonly SkillCaster _casterCaster;
         private readonly BaseUnit _target;
@@ -19,6 +20,7 @@ namespace AAEmu.Game.Models.Tasks.Skills
 
         public PlotTask(Skill skill, Unit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject, PlotNextEvent nextEvent, Dictionary<uint, int> counter) : base(skill)
         {
+            _skill = skill;
             _caster = caster;
             _casterCaster = casterCaster;
             _target = target;
@@ -60,9 +62,9 @@ namespace AAEmu.Game.Models.Tasks.Skills
             {
                 return;
             }
-            _caster.BroadcastPacket(new SCPlotEndedPacket(_caster.TlId), true);
-            TlIdManager.Instance.ReleaseId(_caster.TlId);
-            _caster.TlId = 0;
+            _caster.BroadcastPacket(new SCPlotEndedPacket(_skill.TlId), true);
+            TlIdManager.Instance.ReleaseId(_skill.TlId);
+            _skill.TlId = 0;
         }
     }
 }

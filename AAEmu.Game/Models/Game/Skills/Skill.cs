@@ -191,6 +191,8 @@ namespace AAEmu.Game.Models.Game.Skills
         public SkillTemplate Template { get; set; }
         public uint TemplateId { get; set; }
         public byte Level { get; set; }
+        public ushort TlId { get; set; } // Skill Id
+        public ushort Pid { get; set; } // Plot Id
 
         public Skill()
         {
@@ -549,14 +551,12 @@ namespace AAEmu.Game.Models.Game.Skills
                     }
             }
 
-            //caster.TlId = (ushort)TlIdManager.Instance.GetNextId();
-            //caster.TlIdPlot = caster.TlId;
             caster.SkillId = Id;
             //caster.IsInBattle = true;
+            TlId = (ushort)TlIdManager.Instance.GetNextId();
 
             if (Template.Plot != null)
             {
-                caster.TlIdPlot = (ushort)TlIdManager.Instance.GetNextId();
                 var eventTemplate = Template.Plot.EventTemplate;
                 caster.Step = new PlotStep
                 {
@@ -570,26 +570,24 @@ namespace AAEmu.Game.Models.Game.Skills
                 var res = true;
                 if (caster.Step.Flag != 0)
                 {
-                    var callCounter = new Dictionary<uint, int>();
-                    callCounter.Add(caster.Step.Event.Id, 1);
+                    var callCounter = new Dictionary<uint, int> { { caster.Step.Event.Id, 1 } };
                     foreach (var evnt in eventTemplate.NextEvents)
                     {
                         res = res && BuildPlot(caster, casterType, target, targetType, skillObject, evnt, caster.Step, callCounter);
                     }
                 }
                 ParsePlot(caster, casterType, target, targetType, skillObject, caster.Step);
-                if (!res)
-                    return;
+                //if (!res)
+                //    return;
                 StopPlotEvent(caster);
                 Cast(caster, casterType, target, targetType, skillObject);
             }
             else
             {
-                caster.TlId = (ushort)TlIdManager.Instance.GetNextId();
                 if (Template.CastingTime > 0)
                 {
                     // Deffered Cast Skill
-                    caster.BroadcastPacket(new SCSkillStartedPacket(Id, caster.TlId, casterType, targetType, this, skillObject), true);
+                    caster.BroadcastPacket(new SCSkillStartedPacket(Id, TlId, casterType, targetType, this, skillObject), true);
                     caster.SkillTask = new CastTask(this, caster, casterType, target, targetType, skillObject);
                     TaskManager.Instance.Schedule(caster.SkillTask, TimeSpan.FromMilliseconds(Template.CastingTime));
                 }
@@ -597,14 +595,14 @@ namespace AAEmu.Game.Models.Game.Skills
                 {
                     // MeleeCast with autoattack
                     caster.IsAutoAttack = true; // enable auto attack
-                    caster.BroadcastPacket(new SCSkillStartedPacket(Id, caster.TlId, casterType, targetType, this, skillObject), true);
+                    caster.BroadcastPacket(new SCSkillStartedPacket(Id, TlId, casterType, targetType, this, skillObject), true);
                     caster.AutoAttackTask = new MeleeCastTask(this, caster, casterType, target, targetType, skillObject);
                     TaskManager.Instance.Schedule(caster.AutoAttackTask, TimeSpan.FromMilliseconds(300), TimeSpan.FromMilliseconds(1500));
                 }
                 else
                 {
                     // Instant Cast Skill
-                    //caster.BroadcastPacket(new SCSkillStartedPacket(Id, caster.TlId, casterType, targetType, this, skillObject), true);
+                    //caster.BroadcastPacket(new SCSkillStartedPacket(Id, TlId, casterType, targetType, this, skillObject), true);
                     Cast(caster, casterType, target, targetType, skillObject);
                 }
             }
@@ -693,7 +691,9 @@ namespace AAEmu.Game.Models.Game.Skills
                             step.Flag = 2; // чтобы в template.Apply был доступ
                             break;
                     }
-                    template?.Apply(caster, casterType, target, targetType, new CastPlot(caster.Step.Event.PlotId, caster.TlIdPlot, caster.Step.Event.Id, Template.Id), this, skillObject, DateTime.Now);
+                    caster.TlId = TlId;
+
+                    template?.Apply(caster, casterType, target, targetType, new CastPlot(caster.Step.Event.PlotId, TlId, caster.Step.Event.Id, Template.Id), this, skillObject, DateTime.Now);
                 }
             }
 
@@ -701,7 +701,7 @@ namespace AAEmu.Game.Models.Game.Skills
             var objId = step.Casting || step.Channeling ? caster.ObjId : 0;
             var casterPlotObj = new PlotObject(caster);
             var targetPlotObj = new PlotObject(target);
-            caster.BroadcastPacket(new SCPlotEventPacket(caster.TlIdPlot, caster.Step.Event.Id, Template.Id, casterPlotObj, targetPlotObj, objId, time, caster.Step.Flag), true);
+            caster.BroadcastPacket(new SCPlotEventPacket(TlId, caster.Step.Event.Id, Template.Id, casterPlotObj, targetPlotObj, objId, time, caster.Step.Flag), true);
 
             foreach (var st in step.Steps)
             {
@@ -723,14 +723,14 @@ namespace AAEmu.Game.Models.Game.Skills
 
                 // Get a random number (from 0 to n)
                 var value = Rand.Next(0, 1);
-                               // для skillId = 2
-                               // 87 (35) - удар наотмаш, chr
-                               //  2 (37) - удар сбоку, NPC
-                               //  3 (46) - удар сбоку, chr
-                               //  1 (35) - удар похож на 2 удар сбоку, NPC
-                               // 91 - удар сверху (немного справа)
-                               // 92 - удар наотмашь слева вниз направо
-                               //  0 - удар не наносится (расстояние большое и надо подойти поближе), f=1, c=15
+                // для skillId = 2
+                // 87 (35) - удар наотмаш, chr
+                //  2 (37) - удар сбоку, NPC
+                //  3 (46) - удар сбоку, chr
+                //  1 (35) - удар похож на 2 удар сбоку, NPC
+                // 91 - удар сверху (немного справа)
+                // 92 - удар наотмашь слева вниз направо
+                //  0 - удар не наносится (расстояние большое и надо подойти поближе), f=1, c=15
                 var effectDelay = new Dictionary<int, short> { { 0, 49 }, { 1, 45 } };
                 var fireAnimId = new Dictionary<int, int> { { 0, 91 }, { 1, 92 } };
                 var effectDelay2 = new Dictionary<int, short> { { 0, 49 }, { 1, 43 } };
@@ -739,21 +739,21 @@ namespace AAEmu.Game.Models.Game.Skills
                 var trg = (Unit)target;
                 var dist = MathUtil.CalculateDistance(caster.Position, trg.Position, true);
 
-                _log.Warn("SCSkillFiredPacket ObjId: {0}, Id: {1}, TlId: {2}", caster.ObjId, Id, caster.TlId);
+                _log.Warn("SCSkillFiredPacket ObjId: {0}, Id: {1}, TlId: {2}", caster.ObjId, Id, TlId);
 
 
                 if (dist - 1 >= SkillManager.Instance.GetSkillTemplate(Id).MinRange && dist - 1 <= SkillManager.Instance.GetSkillTemplate(Id).MaxRange)
                 {
                     caster.BroadcastPacket(caster is Character
-                            ? new SCSkillFiredPacket(Id, caster.TlId, casterType, targetType, this, skillObject, effectDelay[value], fireAnimId[value])    // character
-                            : new SCSkillFiredPacket(Id, caster.TlId, casterType, targetType, this, skillObject, effectDelay2[value], fireAnimId2[value]), // npc
+                            ? new SCSkillFiredPacket(Id, TlId, casterType, targetType, this, skillObject, effectDelay[value], fireAnimId[value])    // character
+                            : new SCSkillFiredPacket(Id, TlId, casterType, targetType, this, skillObject, effectDelay2[value], fireAnimId2[value]), // npc
                         true);
                 }
                 else
                 {
                     caster.BroadcastPacket(caster is Character
-                            ? new SCSkillFiredPacket(Id, caster.TlId, casterType, targetType, this, skillObject, effectDelay[value], fireAnimId[value], false)     // character
-                            : new SCSkillFiredPacket(Id, caster.TlId, casterType, targetType, this, skillObject, effectDelay2[value], fireAnimId2[value], false),  // npc
+                            ? new SCSkillFiredPacket(Id, TlId, casterType, targetType, this, skillObject, effectDelay[value], fireAnimId[value], false)     // character
+                            : new SCSkillFiredPacket(Id, TlId, casterType, targetType, this, skillObject, effectDelay2[value], fireAnimId2[value], false),  // npc
                         true);
 
                     if (caster is Character chr)
@@ -765,7 +765,7 @@ namespace AAEmu.Game.Models.Game.Skills
             }
             else
             {
-                caster.BroadcastPacket(new SCSkillFiredPacket(Id, caster.TlId, casterType, targetType, this, skillObject), true);
+                caster.BroadcastPacket(new SCSkillFiredPacket(Id, TlId, casterType, targetType, this, skillObject), true);
             }
 
             if (Template.ChannelingTime > 0)
@@ -773,7 +773,7 @@ namespace AAEmu.Game.Models.Game.Skills
                 if (Template.ChannelingBuffId != 0)
                 {
                     var buff = SkillManager.Instance.GetBuffTemplate(Template.ChannelingBuffId);
-                    buff?.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, caster.TlId), this, skillObject, DateTime.Now);
+                    buff?.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, TlId), this, skillObject, DateTime.Now);
                 }
 
                 caster.SkillTask = new ChannelingTask(this, caster, casterType, target, targetType, skillObject);
@@ -788,28 +788,28 @@ namespace AAEmu.Game.Models.Game.Skills
         private async void StopSkill(Unit caster)
         {
             await caster.AutoAttackTask.Cancel();
-            caster.BroadcastPacket(new SCSkillEndedPacket(caster.TlId), true);
+            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
             //caster.BroadcastPacket(new SCSkillStoppedPacket(caster.ObjId, Id), true);
             caster.AutoAttackTask = null;
             caster.IsAutoAttack = false; // turned off auto attack
-            if (caster.TlId <= 0)
+            if (TlId <= 0)
             {
                 return;
             }
-            TlIdManager.Instance.ReleaseId(caster.TlId);
-            //caster.TlId = 0;
+            TlIdManager.Instance.ReleaseId(TlId);
+            TlId = 0;
         }
 
-        public static void StopPlotEvent(Unit caster)
+        public void StopPlotEvent(Unit caster)
         {
-            caster.BroadcastPacket(new SCPlotEndedPacket(caster.TlIdPlot), true);
+            caster.BroadcastPacket(new SCPlotEndedPacket(TlId), true);
             caster.SkillTask = null;
-            if (caster.TlIdPlot <= 0)
+            if (TlId <= 0)
             {
                 return;
             }
-            TlIdManager.Instance.ReleaseId(caster.TlIdPlot);
-            caster.TlIdPlot = 0;
+            TlIdManager.Instance.ReleaseId(TlId);
+            TlId = 0;
         }
 
         public void Channeling(Unit caster, SkillCaster casterType, BaseUnit target, SkillCastTarget targetType, SkillObject skillObject)
@@ -821,19 +821,23 @@ namespace AAEmu.Game.Models.Game.Skills
             caster.SkillTask = null;
             if (Template.ChannelingBuffId != 0)
             {
+                // убираем баффы
                 caster.Effects.RemoveEffect(Template.ChannelingBuffId, Template.Id);
             }
             if (Template.ToggleBuffId != 0) // здесь делаем Баффы
             {
+                // ставим баффы
                 var buff = SkillManager.Instance.GetBuffTemplate(Template.ToggleBuffId);
-                buff?.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, caster.TlId), this, skillObject, DateTime.Now);
+                buff?.Apply(caster, casterType, target, targetType, new CastSkill(Template.Id, TlId), this, skillObject, DateTime.Now);
             }
             if (Template.EffectDelay > 0)
             {
+                // Deffered Apply Skill Task
                 TaskManager.Instance.Schedule(new ApplySkillTask(this, caster, casterType, target, targetType, skillObject), TimeSpan.FromMilliseconds(Template.EffectDelay));
             }
             else
             {
+                // Instant Apply Skill Task
                 Apply(caster, casterType, target, targetType, skillObject);
             }
         }
@@ -953,7 +957,7 @@ namespace AAEmu.Game.Models.Game.Skills
                     {
                         continue;
                     }
-                    var effectToApply = new EffectToApply(effect.Template, caster, casterType, target, targetType, new CastSkill(Template.Id, caster.TlId), this, skillObject);
+                    var effectToApply = new EffectToApply(effect.Template, caster, casterType, target, targetType, new CastSkill(Template.Id, TlId), this, skillObject);
                     effectsToApply.Add(effectToApply);
                 }
             }
@@ -965,11 +969,11 @@ namespace AAEmu.Game.Models.Game.Skills
             {
                 chart.ChangeLabor((short)-Template.ConsumeLaborPower, Template.ActabilityGroupId);
             }
-            caster.BroadcastPacket(new SCSkillEndedPacket(caster.TlId), true);
-            if (caster.TlId > 0)
+            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
+            if (TlId > 0)
             {
-                TlIdManager.Instance.ReleaseId(caster.TlId);
-                caster.TlId = 0;
+                TlIdManager.Instance.ReleaseId(TlId);
+                TlId = 0;
             }
             if (Template.CastingTime > 0)
             {
@@ -988,15 +992,15 @@ namespace AAEmu.Game.Models.Game.Skills
             {
                 caster.Effects.RemoveEffect(Template.ToggleBuffId, Template.Id);
             }
-            caster.BroadcastPacket(new SCCastingStoppedPacket(caster.TlId, 0), true);
-            caster.BroadcastPacket(new SCSkillEndedPacket(caster.TlId), true);
+            caster.BroadcastPacket(new SCCastingStoppedPacket(TlId, 0), true);
+            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
             caster.SkillTask = null;
-            if (caster.TlId <= 0)
+            if (TlId <= 0)
             {
                 return;
             }
-            TlIdManager.Instance.ReleaseId(caster.TlId);
-            caster.TlId = 0;
+            TlIdManager.Instance.ReleaseId(TlId);
+            TlId = 0;
         }
     }
 }
