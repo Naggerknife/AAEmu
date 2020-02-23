@@ -1,10 +1,7 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Error;
-using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Skills;
-using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Core.Packets.C2G
 {
@@ -16,15 +13,13 @@ namespace AAEmu.Game.Core.Packets.C2G
 
         public override void Read(PacketStream stream)
         {
-            Skill skill;
-            Item item;
             var skillId = stream.ReadUInt32();
 
-            var skillCasterType = stream.ReadByte(); // who applies
+            var skillCasterType = stream.ReadByte(); // кто применяет
             var skillCaster = SkillCaster.GetByType((SkillCasterType)skillCasterType);
             skillCaster.Read(stream);
 
-            var skillCastTargetType = stream.ReadByte(); // on whom apply
+            var skillCastTargetType = stream.ReadByte(); // на кого применяют
             var skillCastTarget = SkillCastTarget.GetByType((SkillCastTargetType)skillCastTargetType);
             skillCastTarget.Read(stream);
 
@@ -35,38 +30,27 @@ namespace AAEmu.Game.Core.Packets.C2G
 
             _log.Debug("StartSkill: Id {0}, flag {1}", skillId, flag);
 
-            if (skillCaster is SkillItem)
+            if (SkillManager.Instance.IsDefaultSkill(skillId) || SkillManager.Instance.IsCommonSkill(skillId) && !(skillCaster is SkillItem))
             {
-                item = Connection.ActiveChar.Inventory.GetItem(((SkillItem)skillCaster).ItemId);
-                if (item == null || skillId != item.Template.UseSkillId)
-                {
-                    Connection.ActiveChar.SendErrorMessage(ErrorMessageType.FailedToUseItem);
-                    return;
-                }
-                Connection.ActiveChar.Quests.OnItemUse(item);
-                Connection.ActiveChar.Item = item; // Item который используется персонажем в каких либо действиях
-                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+                var skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId)); // TODO переделать...
+                skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
-            else if (SkillManager.Instance.IsDefaultSkill(skillId) || SkillManager.Instance.IsCommonSkill(skillId))
+            else if (skillCaster is SkillItem)
             {
-                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId)); // TODO переделать...
+                var item = Connection.ActiveChar.Inventory.GetItem(((SkillItem)skillCaster).ItemId);
+                if (item == null || skillId != item.Template.UseSkillId)
+                    return;
+                Connection.ActiveChar.Quests.OnItemUse(item);
+                var skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+                skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
             else if (Connection.ActiveChar.Skills.Skills.ContainsKey(skillId))
             {
-                skill = Connection.ActiveChar.Skills.Skills[skillId];
-            }
-            else if (skillId > 0 && Connection.ActiveChar.Skills.IsDerivitiveSkill(skillId))
-            {
-                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
-                //skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
+                var skill = Connection.ActiveChar.Skills.Skills[skillId];
+                skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
             else
-            {
                 _log.Warn("StartSkill: Id {0}, undefined use type", skillId);
-                Connection.ActiveChar.SendErrorMessage(ErrorMessageType.UnknownSkill);
-                return;
-            }
-            skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
         }
     }
 }

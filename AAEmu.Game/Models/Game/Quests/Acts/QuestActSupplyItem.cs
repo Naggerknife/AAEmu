@@ -25,24 +25,27 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
             _log.Warn("QuestActSupplyItem");
             if (objective >= Count)
                 return true;
-            var tasks = new List<ItemTask>();
-            var item = ItemManager.Instance.Create(ItemId, Count, GradeId);
-            var backpackTemplate = (BackpackTemplate)item?.Template;
-            var res = character.Inventory.AddItem(item);
-            if (res == null)
-                if (item != null)
-                {
-                    ItemIdManager.Instance.ReleaseId((uint)item.Id);
-                }
-
-            if (item != null && res != null && res.Id != item.Id)
-                tasks.Add(new ItemCountUpdate(res, item.Count));
             else
-                tasks.Add(new ItemAdd(item));
-            character.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.QuestSupplyItems, tasks, new List<ulong>()));
-            if (backpackTemplate != null && backpackTemplate.BackpackType == BackpackType.TradePack)
-                character.Inventory.Move(item.Id, item.SlotType, (byte)item.Slot, 0, SlotType.Equipment, (byte)EquipmentItemSlot.Backpack);
-            return true;
+            {
+                var tasks = new List<ItemTask>();
+                var item = ItemManager.Instance.Create(ItemId, Count, GradeId);
+                if (item == null)
+                    return false;
+                var backpackTemplate = (BackpackTemplate)null;
+                if (item.Template is BackpackTemplate)
+                    backpackTemplate = (BackpackTemplate)item.Template;
+                var res = character.Inventory.AddItem(item);
+                if (res == null)
+                    ItemIdManager.Instance.ReleaseId((uint)item.Id);
+                if (res.Id != item.Id)
+                    tasks.Add(new ItemCountUpdate(res, item.Count));
+                else
+                    tasks.Add(new ItemAdd(item));
+                character.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.QuestSupplyItems, tasks, new List<ulong>()));
+                if (backpackTemplate != null && backpackTemplate.BackpackType == BackpackType.TradePack )
+                    character.Inventory.Move(item.Id, item.SlotType, (byte)item.Slot, 0, SlotType.Equipment, (byte)EquipmentItemSlot.Backpack);
+                return true;
+            }
         }
     }
 }

@@ -22,7 +22,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
         public override void Use(Unit caster, Doodad owner, uint skillId)
         {
-            _log.Debug("DoodadFuncFinal: After {0}, MinTime {1}, MaxTime {2}, Tip {3}, Respawn {4}", After, MinTime, MaxTime, Tip, Respawn);
+            _log.Debug("DoodadFuncFinal: skillId {0}, After {1}, Respawn {2}, MinTime {3}, MaxTime {4}, ShowTip {5}, ShowEndTime {6}, Tip {7}",
+                skillId, After, Respawn, MinTime, MaxTime, ShowTip, ShowEndTime, Tip);
 
             var delay = Rand.Next(MinTime, MaxTime);
             var character = (Character)caster;
@@ -45,9 +46,16 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                     //character.Inventory.AddNewItem(itemId, count, 0, ItemTaskType.Loot);
                 }
             }
-            owner.GrowthTime = DateTime.Now.AddMilliseconds(delay); // TODO ... need here?
-            owner.FuncTask = new DoodadFuncFinalTask(caster, owner, skillId, Respawn);
-            TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(After)); // After ms remove the object from visibility
+            if (After > 0)
+            {
+                owner.GrowthTime = DateTime.Now.AddMilliseconds(delay); // TODO ... need here?
+                owner.FuncTask = new DoodadFuncFinalTask(caster, owner, skillId, Respawn);
+                TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(After)); // After ms remove the object from visibility
+            }
+            else
+            {
+                owner.Delete();
+            }
         }
     }
 }

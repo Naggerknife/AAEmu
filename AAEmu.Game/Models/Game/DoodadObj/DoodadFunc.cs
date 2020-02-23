@@ -20,7 +20,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj
 
         public async void Use(Unit caster, Doodad owner, uint skillId)
         {
-            _log.Debug("DoodadFunc : GroupId {0}, FuncId {1}, FuncType {2}, NextPhase {3}, SoundId {4}, SkillId {5}, PermId {6}, Count {7}", GroupId, FuncId, FuncType, NextPhase, SoundId, SkillId, PermId, Count);
+            _log.Debug("DoodadFunc : skillId {0}, GroupId {1}, FuncId {2}, FuncType {3}, NextPhase {4}, SoundId {5}, SkillId {6}, PermId {7}, Count {8}",
+                skillId, GroupId, FuncId, FuncType, NextPhase, SoundId, SkillId, PermId, Count);
 
             owner.GrowthTime = DateTime.MinValue;
             var template = DoodadManager.Instance.GetFuncTemplate(FuncId, FuncType);

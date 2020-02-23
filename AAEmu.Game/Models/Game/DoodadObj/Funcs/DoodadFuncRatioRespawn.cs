@@ -16,7 +16,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
         public override void Use(Unit caster, Doodad owner, uint skillId)
         {
-            _log.Debug("DoodadFuncRatioRespawn : Ratio {0}, SpawnDoodadId {1}", Ratio, SpawnDoodadId);
+            _log.Debug("DoodadFuncRatioRespawn : skillId {0}, Ratio {1}, SpawnDoodadId {2}", skillId, Ratio, SpawnDoodadId);
 
             if (caster is Character character)
             {

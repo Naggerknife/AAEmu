@@ -18,7 +18,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
         public override void Use(Unit caster, Doodad owner, uint skillId)
         {
-            _log.Debug("DoodadFuncTimer : NextPhase {0}, SkillId {1}, Delay {2}, Tip {3}", NextPhase, skillId, Delay, Tip);
+            _log.Debug("DoodadFuncTimer : skillId {0}, Delay {1}, NextPhase {2}, KeepRequester {3}, ShowTip {4}, ShowEndTime {5}, Tip {6}",
+                skillId, Delay, NextPhase, KeepRequester, ShowTip, ShowEndTime, Tip);
 
             //This is a temporary fix. We need to find how to properly call the next function.
             //var nextFunc = DoodadManager.Instance.GetFunc(owner.FuncGroupId, skillId);

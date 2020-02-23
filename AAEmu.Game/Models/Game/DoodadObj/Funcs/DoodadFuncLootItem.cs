@@ -20,7 +20,9 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
         public override void Use(Unit caster, Doodad owner, uint skillId)
         {
-            _log.Debug("DoodadFuncLootItem: WorldInteractionId {0}, ItemId {1}, CountMin {2}, CountMax {3}, Percent {4}, RemainTime {5}, GroupId {6}", WorldInteractionId, ItemId, CountMin, CountMax, Percent, RemainTime, GroupId);
+            _log.Debug("DoodadFuncLootItem: skillId {0}, WorldInteractionId {1}, ItemId {2}, CountMin {3}, CountMax {4}, Percent {5}, RemainTime {6}, GroupId {7}",
+                skillId, WorldInteractionId, ItemId, CountMin, CountMax, Percent, RemainTime, GroupId);
+
             var character = (Character)caster;
             if (character == null) return;
 
