@@ -147,6 +147,9 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public bool FreezeShip { get; set; }
         public bool CrowdFriendly { get; set; }
         public bool CrowdHostile { get; set; }
+        public string Name { get; set; }
+        public string Desc { get; set; }
+
         public override bool OnActionTime => Tick > 0;
 
         public TickEffect TickEffect { get; set; }

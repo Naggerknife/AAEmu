@@ -224,7 +224,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                         {
                             var template = new NpcTemplate();
                             template.Id = reader.GetUInt32("id");
-                            template.Name = reader.GetString("name");
+                            template.Name = LocalizationManager.Instance.GetEnglishLocalizedText("npcs", "name", template.Id);
                             template.CharRaceId = reader.GetInt32("char_race_id");
                             template.NpcGradeId = (NpcGradeType)reader.GetByte("npc_grade_id");
                             template.NpcKindId = (NpcKindType)reader.GetByte("npc_kind_id");

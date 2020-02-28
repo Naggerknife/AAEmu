@@ -162,7 +162,7 @@ namespace AAEmu.Game.Models.Game.Units
                             character.SummarizeDamage[0] = 0;
                             character.BroadcastPacket(new SCUnitDeathPacket(currentTarget.ObjId, 1, character), true);
 
-                            var lootDropItems = ItemManager.Instance.CreateLootDropItems(killer.ObjId);
+                            var lootDropItems = ItemManager.Instance.CreateLootDropItems(currentTarget.ObjId);
                             if (lootDropItems.Count > 0)
                                 character.BroadcastPacket(new SCLootableStatePacket(currentTarget.ObjId, true), true);
 

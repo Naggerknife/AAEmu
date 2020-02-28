@@ -110,6 +110,8 @@ namespace AAEmu.Game.Core.Managers
                             template.UseAcceptMessage = reader.GetBoolean("use_accept_message", true);
                             template.UseCompleteMessage = reader.GetBoolean("use_complete_message", true);
                             template.GradeId = reader.GetUInt32("grade_id", 0);
+                            template.Name = LocalizationManager.Instance.GetEnglishLocalizedText("quest_contexts", "name", template.Id);
+                            
                             _templates.Add(template.Id, template);
                         }
                     }
@@ -974,6 +976,8 @@ namespace AAEmu.Game.Core.Managers
                             template.HighlightDoodadPhase = reader.GetInt32("highlight_doodad_phase", -1); // TODO phase = 0?
                             template.UseAlias = reader.GetBoolean("use_alias", true);
                             template.QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0);
+                            template.Name = LocalizationManager.Instance.GetEnglishLocalizedText("quest_act_obj_spheres", "name", template.Id);
+ 
                             _actTemplates["QuestActObjSphere"].Add(template.Id, template);
                         }
                     }

@@ -31,7 +31,6 @@ namespace AAEmu.Game.Scripts.Commands
         {
             return "Spawns a npc or doodad using <unitId> as a template";
         }
-
         public void Execute(Character character, string[] args)
         {
             if (args.Length < 2)
@@ -79,7 +78,7 @@ namespace AAEmu.Game.Scripts.Commands
                         if ((args.Length <= 2) || (!sbyte.TryParse(args[2], out newRotZ)))
                         {
                             newRotZ = MathUtil.ConvertDegreeToDirection(angle);
-                            character.SendMessage("[Spawn] NPC {0} using angle {1}�", unitId, angle);
+                            character.SendMessage("[Spawn] NPC {0} using angle {1}°", unitId, angle);
                         }
                         npcSpawner.Position.RotationX = 0;
                         npcSpawner.Position.RotationY = 0;
@@ -104,10 +103,10 @@ namespace AAEmu.Game.Scripts.Commands
                         if ((args.Length > 2) && (double.TryParse(args[2], out var degrees)))
                         {
                             angle = degrees;
-                            character.SendMessage("[Spawn] Doodad {0} using user provided angle {1}�", unitId, angle);
+                            character.SendMessage("[Spawn] Doodad {0} using user provided angle {1}°", unitId, angle);
                         }
                         else
-                            character.SendMessage("[Spawn] Doodad {0} facing you, using characters angle {1}�", unitId, angle);
+                            character.SendMessage("[Spawn] Doodad {0} facing you, using characters angle {1}°", unitId, angle);
                         newRotZ = MathUtil.ConvertDegreeToDoodadDirection(angle);
                         doodadSpawner.Position.RotationX = 0;
                         doodadSpawner.Position.RotationY = 0;

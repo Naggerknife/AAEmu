@@ -47,6 +47,7 @@ namespace AAEmu.Game
             HousingTldManager.Instance.Initialize();
             TeamIdManager.Instance.Initialize();
 
+            LocalizationManager.Instance.Load();
             ZoneManager.Instance.Load();
             WorldManager.Instance.Load();
             QuestManager.Instance.Load();

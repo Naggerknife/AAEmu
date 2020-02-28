@@ -1,4 +1,4 @@
-namespace AAEmu.Game.Models.Game.Char
+﻿namespace AAEmu.Game.Models.Game.Char
 {
     public class ExpertLimit
     {
@@ -11,5 +11,6 @@ namespace AAEmu.Game.Models.Game.Char
         public int UpPrice { get; set; }
         public uint DownCurrencyId { get; set; }
         public int DownPrice { get; set; }
+        public string Name { get; set; }
     }
 }

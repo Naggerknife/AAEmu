@@ -7,6 +7,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
     public class BubbleEffect : EffectTemplate
     {
         public uint KindId { get; set; }
+        public string Speech { get; set; }
 
         public override bool OnActionTime => false;
 

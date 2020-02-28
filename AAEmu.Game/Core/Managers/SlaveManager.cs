@@ -181,7 +181,7 @@ namespace AAEmu.Game.Core.Managers
                             var template = new SlaveTemplate
                             {
                                 Id = reader.GetUInt32("id"),
-                                Name = reader.GetString("name"),
+                                Name = LocalizationManager.Instance.GetEnglishLocalizedText("slaves", "name", reader.GetUInt32("id")),
                                 ModelId = reader.GetUInt32("model_id"),
                                 Mountable = reader.GetBoolean("mountable"),
                                 SpawnXOffset = reader.GetFloat("spawn_x_offset"),

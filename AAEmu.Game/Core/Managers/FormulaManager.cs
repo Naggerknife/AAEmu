@@ -51,9 +51,14 @@ namespace AAEmu.Game.Core.Managers
         {
             // TODO Funcs: min, max, clamp, if_zero, if_positive, if_negative, floor, log, sqrt
             CalculationEngine = new CalculationEngine(CultureInfo.InvariantCulture, ExecutionMode.Compiled, true, true, false);
+            //CalculationEngine.AddFunction("min", (a, b) => Math.Min(a, b)); // ?
+            //CalculationEngine.AddFunction("max", (a, b) => Math.Max(a, b)); // ?
             CalculationEngine.AddFunction("clamp", (a, b, c) => a < b ? b : (a > c ? c : a));
             CalculationEngine.AddFunction("if_negative", (a, b, c) => a < 0 ? b : c);
             CalculationEngine.AddFunction("if_positive", (a, b, c) => a > 0 ? b : c);
+            //CalculationEngine.AddFunction("floor", d => Math.Floor(d)); // ?
+            CalculationEngine.AddFunction("log", d => Math.Log(d));     // ?
+            //CalculationEngine.AddFunction("sqrt", d => Math.Sqrt(d));   // ?
             const double tolerance = 0;
             CalculationEngine.AddFunction("if_zero", (a, b, c) => Math.Abs(a) < tolerance ? b : c);
 

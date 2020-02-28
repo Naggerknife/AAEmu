@@ -38,5 +38,7 @@ namespace AAEmu.Game.Models.Game.Items.Templates
         public int FixedGrade { get; set; }
         public int LivingPointPrice { get; set; }
         public byte CharGender { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
     }
 }

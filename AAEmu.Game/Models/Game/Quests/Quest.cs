@@ -93,17 +93,24 @@ namespace AAEmu.Game.Models.Game.Quests
                 {
                     if (acts[i].DetailType == "QuestActSupplyItem" && Step == (byte)QuestComponentKind.Supply)
                     {
-                        byte next = Step;
+                        var next = Step;
                         next++;
                         var componentnext = Template.GetComponent(next);
                         var actsnext = QuestManager.Instance.GetActs(componentnext.Id);
-                        if (actsnext[i].DetailType == "QuestActObjItemGather")
-                            res = acts[i].Use(Owner, this, SupplyItem);
-                        else
-                            res = false;
+                        
+                        //foreach (var qa in actsnext)
+                        //{
+                        //    if ((qa.DetailType == "QuestActObjItemGather") && (acts[i].DetailId == qa.DetailId))
+                        //        res = acts[i].Use(Owner, this, SupplyItem);
+                        //    else
+                        //        res = false;
+                        //}
+
+                        res = actsnext[i].DetailType == "QuestActObjItemGather" && acts[i].Use(Owner, this, SupplyItem);
                     }
                     else
                         res = acts[i].Use(Owner, this, Objectives[i]);
+                    
                     SupplyItem = 0;
 
                 }

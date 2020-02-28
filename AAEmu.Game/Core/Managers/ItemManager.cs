@@ -539,7 +539,8 @@ namespace AAEmu.Game.Core.Managers
                                 DurabilityRatio = reader.GetFloat("durability_ratio"),
                                 RenewCategory = reader.GetInt32("renew_category"),
                                 ItemProcId = reader.GetInt32("item_proc_id"),
-                                StatMultiplier = reader.GetInt32("stat_multiplier")
+                                StatMultiplier = reader.GetInt32("stat_multiplier"),
+                                Name = LocalizationManager.Instance.GetEnglishLocalizedText("holdables", "name", reader.GetUInt32("id"))
                             };
 
                             _holdables.Add(template.Id, template);
@@ -922,6 +923,9 @@ namespace AAEmu.Game.Core.Managers
                             template.FixedGrade = reader.GetInt32("fixed_grade");
                             template.LivingPointPrice = reader.GetInt32("living_point_price");
                             template.CharGender = reader.GetByte("char_gender_id");
+                            template.Name = LocalizationManager.Instance.GetEnglishLocalizedText("items", "name", template.Id);
+                            template.Description = LocalizationManager.Instance.GetEnglishLocalizedText("items", "description", template.Id);
+
                             if (!_templates.ContainsKey(id))
                                 _templates.Add(template.Id, template);
                         }
@@ -1007,23 +1011,23 @@ namespace AAEmu.Game.Core.Managers
                     }
                 }
 
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_socket_chances";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var numSockets = reader.GetUInt32("num_sockets");
-                            var chance = reader.GetUInt32("success_ratio");
+                //using (var command = connection.CreateCommand())
+                //{
+                //    command.CommandText = "SELECT * FROM item_socket_chances";
+                //    command.Prepare();
+                //    using (var sqliteReader = command.ExecuteReader())
+                //    using (var reader = new SQLiteWrapperReader(sqliteReader))
+                //    {
+                //        while (reader.Read())
+                //        {
+                //            var numSockets = reader.GetUInt32("num_sockets");
+                //            var chance = reader.GetUInt32("success_ratio");
 
-                            if (!_socketChance.ContainsKey(numSockets))
-                                _socketChance.Add(numSockets, chance);
-                        }
-                    }
-                }
+                //            if (!_socketChance.ContainsKey(numSockets))
+                //                _socketChance.Add(numSockets, chance);
+                //        }
+                //    }
+                //}
 
                 using (var command = connection.CreateCommand())
                 {

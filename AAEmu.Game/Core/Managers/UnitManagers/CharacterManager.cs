@@ -337,6 +337,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                             template.UpPrice = reader.GetInt32("up_price");
                             template.DownCurrencyId = reader.GetUInt32("down_currency_id", 0);
                             template.DownPrice = reader.GetInt32("down_price");
+                            template.Name = LocalizationManager.Instance.GetEnglishLocalizedText("expert_limits", "name", template.Id);
+
                             _expertLimits.Add(step++, template);
                         }
                     }

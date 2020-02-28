@@ -148,6 +148,9 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public bool SourceAlive { get; set; }
         public int TargetDecalRadius { get; set; }
         public int DoodadBundleId { get; set; }
+        public string Name { get; set; }
+        public string Desc { get; set; }
+        public string WebDesc { get; set; }
         public List<SkillEffect> Effects { get; set; }
 
         public SkillTemplate()

@@ -83,7 +83,7 @@ namespace AAEmu.Game.Core.Managers
                             var template = new ShipyardsTemplate
                             {
                                 Id = reader.GetUInt32("id"),
-                                Name = reader.GetString("name"),
+                                Name = LocalizationManager.Instance.GetEnglishLocalizedText("shipyards", "name", reader.GetUInt32("id")),
                                 MainModelId = reader.GetUInt32("main_model_id"),
                                 ItemId = reader.GetUInt32("item_id"),
                                 SpawnOffsetFront = reader.GetFloat("spawn_offset_front"),
@@ -93,6 +93,7 @@ namespace AAEmu.Game.Core.Managers
                                 OriginItemId = reader.GetUInt32("origin_item_id", 0),
                                 TaxationId = reader.GetInt32("taxation_id")
                             };
+ 
                             _shipyards.Add(template.Id, template);
                         }
                     }

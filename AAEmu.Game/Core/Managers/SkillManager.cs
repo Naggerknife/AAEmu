@@ -282,6 +282,10 @@ namespace AAEmu.Game.Core.Managers
                             template.SourceNotCollided = reader.GetBoolean("source_not_collided", true);
                             template.SkillPoints = reader.GetInt32("skill_points");
                             template.DoodadHitFamily = reader.GetInt32("doodad_hit_family");
+                            template.Name = LocalizationManager.Instance.GetEnglishLocalizedText("skills", "name", template.Id);
+                            template.Desc = LocalizationManager.Instance.GetEnglishLocalizedText("skills", "desc", template.Id);
+                            template.WebDesc = LocalizationManager.Instance.GetEnglishLocalizedText("skills", "web_desc", template.Id);
+
                             _skills.Add(template.Id, template);
                         }
                     }
@@ -513,6 +517,8 @@ namespace AAEmu.Game.Core.Managers
                             template.FreezeShip = reader.GetBoolean("freeze_ship", true);
                             template.CrowdFriendly = reader.GetBoolean("crowd_friendly", true);
                             template.CrowdHostile = reader.GetBoolean("crowd_hostile", true);
+                            template.Name = LocalizationManager.Instance.GetEnglishLocalizedText("buffs", "name", template.Id);
+                            template.Desc = LocalizationManager.Instance.GetEnglishLocalizedText("buffs", "desc", template.Id);
 
                             // TEMP FIX FOR FEAR
                             if (template.Duration < 0) template.Duration = -template.Duration;
@@ -708,6 +714,8 @@ namespace AAEmu.Game.Core.Managers
                             var template = new BubbleEffect();
                             template.Id = reader.GetUInt32("id");
                             template.KindId = reader.GetUInt32("kind_id");
+                            template.Speech = LocalizationManager.Instance.GetEnglishLocalizedText("bubble_effects", "speech", template.Id);
+
                             _effects["BubbleEffect"].Add(template.Id, template);
                         }
                     }

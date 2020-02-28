@@ -102,8 +102,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                 UseCreatorFaction = reader.GetBoolean("use_creator_faction", true),
                                 UseTargetDecal = reader.GetBoolean("use_target_decal", true),
                                 UseTargetHighlight = reader.GetBoolean("use_target_highlight", true),
-                                UseTargetSilhouette = reader.GetBoolean("use_target_silhouette", true)
-                            };
+                                UseTargetSilhouette = reader.GetBoolean("use_target_silhouette", true),
+                                Name = LocalizationManager.Instance.GetEnglishLocalizedText("doodad_almighties", "name", reader.GetUInt32("id"))
+                        };
                             _templates.Add(template.Id, template);
                         }
                     }
@@ -127,6 +128,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                     GroupKindId = reader.GetUInt32("doodad_func_group_kind_id"),
                                     SoundId = reader.IsDBNull("sound_id") ? 0 : reader.GetUInt32("sound_id")
                                 };
+                                funcGroups.Name = LocalizationManager.Instance.GetEnglishLocalizedText("doodad_func_groups", "name", funcGroups.Id);
+                                funcGroups.PhaseMsg = LocalizationManager.Instance.GetEnglishLocalizedText("doodad_func_groups", "phase_msg", funcGroups.Id);
                                 _templates[templateId].FuncGroups.Add(funcGroups);
                             }
                         }
@@ -1285,9 +1288,10 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                 MinTime = reader.GetInt32("min_time", 0),
                                 MaxTime = reader.GetInt32("max_time", 0),
                                 ShowTip = reader.GetBoolean("show_tip", true),
-                                ShowEndTime = reader.GetBoolean("show_end_time", true),
-                                Tip = reader.GetString("tip")
+                                ShowEndTime = reader.GetBoolean("show_end_time", true)
                             };
+                            func.Tip = LocalizationManager.Instance.GetEnglishLocalizedText("doodad_func_finals", "tip", func.Id);
+
                             _funcTemplates["DoodadFuncFinal"].Add(func.Id, func);
                         }
                     }
@@ -2373,9 +2377,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                             var func = new DoodadFuncSign
                             {
                                 Id = reader.GetUInt32("id"),
-                                Name = reader.GetString("name"),
                                 PickNum = reader.GetInt32("pick_num")
                             };
+                            func.Name = LocalizationManager.Instance.GetEnglishLocalizedText("doodad_func_signs", "name", func.Id);
                             _funcTemplates["DoodadFuncSign"].Add(func.Id, func);
                         }
                     }
@@ -2574,8 +2578,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                 KeepRequester = reader.GetBoolean("keep_requester", true),
                                 ShowTip = reader.GetBoolean("show_tip", true),
                                 ShowEndTime = reader.GetBoolean("show_end_time", true),
-                                Tip = reader.GetString("tip")
                             };
+                            func.Tip = LocalizationManager.Instance.GetEnglishLocalizedText("doodad_func_timers", "tip", func.Id);
                             _funcTemplates["DoodadFuncTimer"].Add(func.Id, func);
                         }
                     }

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace AAEmu.Game.Models.Game.Quests.Templates
 {
@@ -22,6 +22,7 @@ namespace AAEmu.Game.Models.Game.Quests.Templates
         public bool UseAcceptMessage { get; set; }
         public bool UseCompleteMessage { get; set; }
         public uint GradeId { get; set; }
+        public string Name { get; set; }
         public Dictionary<uint, QuestComponent> Components { get; set; }
 
         public QuestTemplate()

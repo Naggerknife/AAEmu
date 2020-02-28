@@ -27,12 +27,17 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
             var dropRateMax = 0u;
             //var items = new List<Item>();
             var groupNum = 0;
-            while (groupNum < 100)
+            var groupFound = false;
+            HashSet<int> hs = new HashSet<int>();
+            foreach (var lp in lootPacks)
+            {
+                hs.Add(lp.Group);
+            }
+            while (groupNum < hs.Count)
             {
                 groupNum += 1;
                 _log.Warn("DoodadFuncLootPack : skillId {0}, LootPackId {1}, Group Num {2}", skillId, LootPackId, groupNum);
-
-                var groupFound = false;
+                groupFound = false;
                 foreach (var lp in lootPacks)
                 {
                     if (lp.Group != groupNum)
@@ -44,7 +49,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                     groupFound = true;
                 }
                 var dropRateItem = Rand.Next(0, dropRateMax);
-                var dropRateItemId = 0u;
+                var dropRateItemId = (uint)0;
                 foreach (var lp in lootPacks)
                 {
                     if ((lp.DropRate + dropRateItemId >= dropRateItem) && (lp.Group == groupNum))

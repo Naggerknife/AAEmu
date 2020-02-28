@@ -1,4 +1,4 @@
-using AAEmu.Game.Models.Game.Formulas;
+﻿using AAEmu.Game.Models.Game.Formulas;
 
 namespace AAEmu.Game.Models.Game.Items
 {
@@ -24,5 +24,6 @@ namespace AAEmu.Game.Models.Game.Items
         public int RenewCategory { get; set; }
         public int ItemProcId { get; set; }
         public int StatMultiplier { get; set; }
+        public string Name { get; set; }
     }
 }
