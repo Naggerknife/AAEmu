@@ -37,5 +37,17 @@ namespace AAEmu.Game.Models.Game.Quests.Templates
                     return component;
             return null;
         }
+        public QuestComponent[] GetComponents(byte step)
+        {
+            QuestComponent[] qcl = new QuestComponent[0];
+            foreach (var component in Components.Values)
+                if (component.KindId == step)
+                {
+                    System.Array.Resize(ref qcl, qcl.Length + 1);
+                    qcl[qcl.Length - 1] = component;
+                    // return component;
+                }
+            return qcl;
+        }
     }
 }
