@@ -1,4 +1,5 @@
 ﻿using System;
+
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.NPChar;
@@ -117,9 +118,9 @@ namespace AAEmu.Game.Models.Game.Units.Route
             moveType.DeltaMovement[0] = 0;
             moveType.DeltaMovement[1] = 127;
             moveType.DeltaMovement[2] = 0;
-            moveType.Stance = 0;
-            moveType.Alertness = 2;
-            moveType.Time = Seq;
+            moveType.Stance = 0;    // COMBAT = 0x0, IDLE = 0x1
+            moveType.Alertness = 2; // IDLE = 0x0, ALERT = 0x1, COMBAT = 0x2
+            moveType.Time = Seq;    // должно всё время увеличиваться, для нормального движения
 
 
             if (move)

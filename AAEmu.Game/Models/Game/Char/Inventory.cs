@@ -1439,42 +1439,55 @@ namespace AAEmu.Game.Models.Game.Char
 
             //Get Armor Set Bonuses
             var armorSetBuffIds = new List<uint>();
-            foreach (var set in armorSets)
+            foreach (var (key, value) in armorSets)
             {
-                var armorSet = ItemManager.Instance.GetItemSetBonus(set.Key);
-                if (armorSet.SetBonuses.Keys.Min() <= set.Value)
+                var armorSet = ItemManager.Instance.GetItemSetBonus(key);
+                try
                 {
-                    uint highestNumPieces = 0;
-                    foreach (var numPieces in armorSet.SetBonuses.Keys)
+                    if (armorSet.SetBonuses.Keys.Min() <= value)
                     {
-                        if (numPieces <= set.Value && numPieces > highestNumPieces)
+                        uint highestNumPieces = 0;
+                        foreach (var numPieces in armorSet.SetBonuses.Keys.Where(numPieces => numPieces <= value && numPieces > highestNumPieces))
                         {
                             highestNumPieces = numPieces;
                         }
+
+                        if (highestNumPieces != 0)
+                        {
+                            armorSetBuffIds.Add(armorSet.SetBonuses[highestNumPieces].BuffId);
+                        }
                     }
-                    if (highestNumPieces != 0)
-                    {
-                        armorSetBuffIds.Add(armorSet.SetBonuses[highestNumPieces].BuffId);
-                    }
+                }
+                catch (ArgumentNullException argumentNullException)
+                {
+                    // TODO: Handle the System.ArgumentNullException
                 }
             }
 
             //Apply Armor Set Bonuses
-            foreach (var buffId in armorSetBuffIds)
+            try
             {
-                if (!Owner.ArmorSetBuffIds.Contains(buffId))
+                foreach (var buffId in armorSetBuffIds.Where(buffId => !Owner.ArmorSetBuffIds.Contains(buffId)))
                 {
                     Owner.Effects.AddEffect(new Effect(Owner, Owner, SkillCaster.GetByType(SkillCasterType.Item), SkillManager.Instance.GetBuffTemplate(buffId), null, DateTime.Now));
                 }
             }
+            catch (ArgumentNullException argumentNullException)
+            {
+                // TODO: Handle the System.ArgumentNullException
+            }
 
             //Remove old Armor set bonuses
-            foreach (var buffId in Owner.ArmorSetBuffIds)
+            try
             {
-                if (!armorSetBuffIds.Contains(buffId))
+                foreach (var buffId in Owner.ArmorSetBuffIds.Where(buffId => !armorSetBuffIds.Contains(buffId)))
                 {
                     Owner.Effects.RemoveBuff(buffId);
                 }
+            }
+            catch (ArgumentNullException argumentNullException)
+            {
+                // TODO: Handle the System.ArgumentNullException
             }
             Owner.ArmorSetBuffIds = armorSetBuffIds;
         }

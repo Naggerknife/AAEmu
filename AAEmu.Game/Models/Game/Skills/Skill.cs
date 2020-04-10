@@ -597,7 +597,7 @@ namespace AAEmu.Game.Models.Game.Skills
                     caster.IsAutoAttack = true; // enable auto attack
                     caster.BroadcastPacket(new SCSkillStartedPacket(Id, TlId, casterType, targetType, this, skillObject), true);
                     caster.AutoAttackTask = new MeleeCastTask(this, caster, casterType, target, targetType, skillObject);
-                    TaskManager.Instance.Schedule(caster.AutoAttackTask, TimeSpan.FromMilliseconds(300), TimeSpan.FromMilliseconds(1500));
+                    TaskManager.Instance.Schedule(caster.AutoAttackTask, TimeSpan.FromMilliseconds(300), TimeSpan.FromMilliseconds(1000));
                 }
                 else
                 {
@@ -785,33 +785,6 @@ namespace AAEmu.Game.Models.Game.Skills
             }
         }
 
-        private async void StopSkill(Unit caster)
-        {
-            await caster.AutoAttackTask.Cancel();
-            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
-            //caster.BroadcastPacket(new SCSkillStoppedPacket(caster.ObjId, Id), true);
-            caster.AutoAttackTask = null;
-            caster.IsAutoAttack = false; // turned off auto attack
-            if (TlId <= 0)
-            {
-                return;
-            }
-            TlIdManager.Instance.ReleaseId(TlId);
-            TlId = 0;
-        }
-
-        public void StopPlotEvent(Unit caster)
-        {
-            caster.BroadcastPacket(new SCPlotEndedPacket(TlId), true);
-            caster.SkillTask = null;
-            if (TlId <= 0)
-            {
-                return;
-            }
-            TlIdManager.Instance.ReleaseId(TlId);
-            TlId = 0;
-        }
-
         public void Channeling(Unit caster, SkillCaster casterType, BaseUnit target, SkillCastTarget targetType, SkillObject skillObject)
         {
             if (caster == null)
@@ -970,11 +943,8 @@ namespace AAEmu.Game.Models.Game.Skills
                 chart.ChangeLabor((short)-Template.ConsumeLaborPower, Template.ActabilityGroupId);
             }
             caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
-            if (TlId > 0)
-            {
-                TlIdManager.Instance.ReleaseId(TlId);
-                TlId = 0;
-            }
+            //TlIdManager.Instance.ReleaseId(TlId);
+            //TlId = 0;
             if (Template.CastingTime > 0)
             {
                 caster.BroadcastPacket(new SCSkillStoppedPacket(caster.ObjId, Template.Id), true);
@@ -995,10 +965,25 @@ namespace AAEmu.Game.Models.Game.Skills
             caster.BroadcastPacket(new SCCastingStoppedPacket(TlId, 0), true);
             caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
             caster.SkillTask = null;
-            if (TlId <= 0)
-            {
-                return;
-            }
+            TlIdManager.Instance.ReleaseId(TlId);
+            TlId = 0;
+        }
+
+        public void StopPlotEvent(Unit caster)
+        {
+            caster.BroadcastPacket(new SCPlotEndedPacket(TlId), true);
+            caster.SkillTask = null;
+            TlIdManager.Instance.ReleaseId(TlId);
+            TlId = 0;
+        }
+
+        private async void StopSkill(Unit caster)
+        {
+            await caster.AutoAttackTask.Cancel();
+            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
+            //caster.BroadcastPacket(new SCSkillStoppedPacket(caster.ObjId, Id), true);
+            caster.AutoAttackTask = null;
+            caster.IsAutoAttack = false; // turned off auto attack
             TlIdManager.Instance.ReleaseId(TlId);
             TlId = 0;
         }

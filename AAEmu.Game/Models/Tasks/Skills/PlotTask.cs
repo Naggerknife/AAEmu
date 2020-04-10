@@ -63,8 +63,10 @@ namespace AAEmu.Game.Models.Tasks.Skills
                 return;
             }
             _caster.BroadcastPacket(new SCPlotEndedPacket(_skill.TlId), true);
-            TlIdManager.Instance.ReleaseId(_skill.TlId);
-            _skill.TlId = 0;
+
+            //_skill.StopPlotEvent(_caster);
+            //TlIdManager.Instance.ReleaseId(_skill.TlId);
+            //_skill.TlId = 0;
         }
     }
 }
