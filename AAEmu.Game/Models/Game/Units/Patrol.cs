@@ -1,4 +1,5 @@
 ﻿using System;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units.Route;
@@ -89,16 +90,18 @@ namespace AAEmu.Game.Models.Game.Units
         {
             //如果NPC不存在或不处于巡航模式或者当前执行次数不为0
             //If NPC does not exist or is not in cruise mode or the current number of executions is not zero
-            if (npc.Patrol == null || (npc.Patrol.Running == false && this!=npc.Patrol) ||(npc.Patrol.Running == true && this==npc.Patrol))
+            if (npc.Patrol == null || npc.Patrol.Running == false && this != npc.Patrol || npc.Patrol.Running && this == npc.Patrol)
             {
                 //如果上次巡航模式处于暂停状态则保存上次巡航模式
                 //If the last cruise mode is suspended, save the last cruise mode
-                if (npc.Patrol!=null && npc.Patrol !=this && !npc.Patrol.Abandon)
-                { 
+                if (npc.Patrol != null && npc.Patrol != this && !npc.Patrol.Abandon)
+                {
                     LastPatrol = npc.Patrol;
                 }
-                ++Count;
-                ++Seq;
+                //++Count;
+                Count += 2;
+                //++Seq;
+                Seq = (uint)Rand.Next(0, 10000);
                 Running = true;
                 npc.Patrol = this;
                 Execute(npc);
@@ -114,9 +117,9 @@ namespace AAEmu.Game.Models.Game.Units
         /// <param name="npc"></param>
         /// <param name="time"></param>
         /// <param name="patrol"></param>
-        public void Repet(Npc npc, double time = 100, Patrol patrol=null)
+        public void Repeat(Npc npc, double time = 100, Patrol patrol = null)
         {
-            if(!(patrol ?? this).Abandon)
+            if (!(patrol ?? this).Abandon)
             {
                 TaskManager.Instance.Schedule(new UnitMove(patrol ?? this, npc), TimeSpan.FromMilliseconds(time));
             }
@@ -124,12 +127,13 @@ namespace AAEmu.Game.Models.Game.Units
 
         public bool PauseAuto(Npc npc)
         {
-            if (Interrupt || !npc.Patrol.Running)
+            if (!Interrupt && npc.Patrol.Running)
             {
-                Pause(npc);
-                return true;
+                return false;
             }
-            return false;
+
+            Pause(npc);
+            return true;
         }
 
         public void Pause(Npc npc)
@@ -150,41 +154,52 @@ namespace AAEmu.Game.Models.Game.Units
         {
             // 如果当前巡航处于暂停状态则恢复当前巡航
             // Resume current cruise if current cruise is paused
-            if (!Abandon && Running==false)
+            if (!Abandon && Running == false)
             {
                 npc.Patrol.Running = true;
-                Repet(npc);
+                Repeat(npc);
                 return;
             }
             // 如果上次巡航不为null
             // If the last cruise is not null
-            if (LastPatrol!=null && Running == false)
+            const float tolerance = 0.1f;
+            if (LastPatrol == null || Running)
             {
-                if (npc.Position.X == LastPatrol.PausePosition.X && npc.Position.Y == LastPatrol.PausePosition.Y && npc.Position.Z == LastPatrol.PausePosition.Z)
+                return;
+            }
+
+            if (
+                Math.Abs(npc.Position.X - LastPatrol.PausePosition.X) < tolerance
+                &&
+                Math.Abs(npc.Position.Y - LastPatrol.PausePosition.Y) < tolerance
+                &&
+                Math.Abs(npc.Position.Z - LastPatrol.PausePosition.Z) < tolerance
+            )
+            {
+                LastPatrol.Running = true;
+                npc.Patrol = LastPatrol;
+                // 恢复上次巡航
+                // Resume last cruise
+                Repeat(npc, 500, LastPatrol);
+            }
+            else
+            {
+                // 创建直线巡航回归上次巡航暂停点
+                // Create a straight cruise to return to the last cruise pause
+                var line = new Line
                 {
-                    LastPatrol.Running = true;
-                    npc.Patrol = LastPatrol;
-                    // 恢复上次巡航
-                    // Resume last cruise
-                    Repet(npc, 500, LastPatrol);
-                }
-                else
-                {
-                    // 创建直线巡航回归上次巡航暂停点
-                    // Create a straight cruise to return to the last cruise pause
-                    var line = new Line();
                     // 不可中断，不受外力及攻击影响 类似于处于脱战状态
                     // Uninterrupted, unaffected by external forces and attacks
-                    line.Interrupt = false;
-                    line.Loop = false;
-                    line.LastPatrol = LastPatrol;
+                    Interrupt = false,
+                    Loop = false,
+                    LastPatrol = LastPatrol,
                     // 指定目标Point
                     // Specify target point
-                    line.Position = LastPatrol.PausePosition;
-                    // 恢复上次巡航
-                    // Resume last cruise
-                    Repet(npc, 500, line);
-                }
+                    Position = LastPatrol.PausePosition
+                };
+                // 恢复上次巡航
+                // Resume last cruise
+                Repeat(npc, 500, line);
             }
         }
 
@@ -193,8 +208,9 @@ namespace AAEmu.Game.Models.Game.Units
             if (Loop)
             {
                 Count = 0;
-                Seq = 0;
-                Repet(npc, LoopDelay);
+                //Seq = 0;
+                Seq = (uint)Rand.Next(0, 10000);
+                Repeat(npc, LoopDelay);
             }
             else
             {

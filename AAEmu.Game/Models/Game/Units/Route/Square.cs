@@ -1,4 +1,5 @@
-﻿using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Commons.Utils;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units.Movements;
@@ -28,6 +29,9 @@ namespace AAEmu.Game.Models.Game.Units.Route
         /// <param name="degree">角度 默认360度 / Default angle 360 degrees</param>
         public override void Execute(Npc npc)
         {
+            var x = npc.Position.X;
+            var y = npc.Position.Y;
+
             if (Count < Degree / 2)
             {
                 npc.Position.X += (float)0.1;
@@ -48,17 +52,18 @@ namespace AAEmu.Game.Models.Game.Units.Route
 
             // 模拟unit
             // Simulated unit
-            var type = (MoveTypeEnum)1;
+            const MoveTypeEnum type = (MoveTypeEnum)1;
             // 返回moveType对象
+            // Return moveType object
             var moveType = (UnitMoveType)MoveType.GetType(type);
 
             // 改变NPC坐标
-            // Return moveType object
+            // Change NPC coordinates
             moveType.X = npc.Position.X;
             moveType.Y = npc.Position.Y;
             moveType.Z = AppConfiguration.Instance.HeightMapsEnable ? WorldManager.Instance.GetHeight(npc.Position.ZoneId, npc.Position.X, npc.Position.Y) : npc.Position.Z;
 
-            var angle = MathUtil.CalculateAngleFrom(npc.Position.X, npc.Position.Y, moveType.X, moveType.Y);
+            var angle = MathUtil.CalculateAngleFrom(x, y, npc.Position.X, npc.Position.Y);
             var rotZ = MathUtil.ConvertDegreeToDirection(angle);
             moveType.RotationX = 0;
             moveType.RotationY = 0;
@@ -72,13 +77,13 @@ namespace AAEmu.Game.Models.Game.Units.Route
             moveType.DeltaMovement[2] = 0;
             moveType.Stance = 1;    // COMBAT = 0x0, IDLE = 0x1
             moveType.Alertness = 0; // IDLE = 0x0, ALERT = 0x1, COMBAT = 0x2
-            moveType.Time = Seq;    // должно всё время увеличиваться, для нормального движения
+            moveType.Time = (uint)Rand.Next(0, 10000); //Seq;    // должно всё время увеличиваться, для нормального движения
 
             npc.BroadcastPacket(new SCOneUnitMovementPacket(npc.ObjId, moveType), true);
 
             if (Count < Degree)
             {
-                Repet(npc);
+                Repeat(npc);
             }
             else
             {

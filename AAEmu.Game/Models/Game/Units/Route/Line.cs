@@ -1,5 +1,5 @@
 ﻿using System;
-
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.NPChar;
@@ -9,7 +9,7 @@ using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Models.Game.Units.Route
 {
-    class Line : Patrol
+    public class Line : Patrol
     {
         float distance = 0f;
         float MovingDistance = 0.27f;
@@ -144,7 +144,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
                 // broadcast mobile status
                 npc.BroadcastPacket(new SCOneUnitMovementPacket(npc.ObjId, moveType), true);
                 LoopDelay = 500;
-                Repet(npc);
+                Repeat(npc);
             }
             else
             {
@@ -153,6 +153,20 @@ namespace AAEmu.Game.Models.Game.Units.Route
                 moveType.DeltaMovement[1] = 0;
                 npc.BroadcastPacket(new SCOneUnitMovementPacket(npc.ObjId, moveType), true);
                 LoopAuto(npc);
+
+                // запускаем движение по маршруту (квадрат)
+                var rnd = Rand.Next(0, 100);
+                if (rnd > 50)
+                {
+                    var square = new Square();
+                    Repeat(npc, 500, square);
+
+                }
+                else
+                {
+                    var circ = new Circular();
+                    Repeat(npc, 500, circ);
+                }
             }
         }
     }

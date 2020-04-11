@@ -8,8 +8,7 @@ using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Models.Game.Units.Route
 {
-
-    class Track : Patrol
+    public class Track : Patrol
     {
         float distance = 1.5f;
         float MovingDistance = 0.27f;
@@ -129,7 +128,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
                 // Broadcast movement status
                 npc.BroadcastPacket(new SCOneUnitMovementPacket(npc.ObjId, moveType), true);
                 LoopDelay = 500;
-                Repet(npc);
+                Repeat(npc);
             }
             else
             {
@@ -163,12 +162,14 @@ namespace AAEmu.Game.Models.Game.Units.Route
             {
                 // 创建直线巡航回归上次巡航暂停点
                 // Create a straight cruise to return to the last cruise pause
-                var line = new Line();
                 // 不可中断，不受外力及攻击影响 类似于处于脱战状态
                 // Uninterruptible, unaffected by external forces and attacks Similar to being in an off-war situation
-                line.Interrupt = false;
-                line.Loop = false;
-                line.Abandon = false;
+                var line = new Line
+                {
+                    Interrupt = false,
+                    Loop = false,
+                    Abandon = false
+                };
                 line.Pause(npc);
                 LastPatrol = line;
             }

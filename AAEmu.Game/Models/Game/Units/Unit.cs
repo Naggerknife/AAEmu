@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+
 using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
@@ -16,6 +16,7 @@ using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Tasks;
 using AAEmu.Game.Models.Tasks.Skills;
+
 using NLog;
 
 namespace AAEmu.Game.Models.Game.Units
@@ -97,16 +98,16 @@ namespace AAEmu.Game.Models.Game.Units
         public virtual void ReduceCurrentHp(Unit attacker, int value)
         {
 
-                Hp = Math.Max(Hp - value, 0);
-                if (Hp <= 0)
-                {
-                    StopRegen();
-                    DoDie(attacker);
-                    return;
-                }
+            Hp = Math.Max(Hp - value, 0);
+            if (Hp <= 0)
+            {
+                StopRegen();
+                DoDie(attacker);
+                return;
+            }
 
-                StartRegen();
-                BroadcastPacket(new SCUnitPointsPacket(ObjId, Hp, Hp > 0 ? Mp : 0), true);
+            StartRegen();
+            BroadcastPacket(new SCUnitPointsPacket(ObjId, Hp, Hp > 0 ? Mp : 0), true);
         }
         public virtual void ReduceCurrentMp(Unit attacker, int value)
         {
@@ -124,7 +125,9 @@ namespace AAEmu.Game.Models.Game.Units
                     case Npc npc:
                         {
                             if (npc.CurrentTarget == null)
+                            {
                                 return;
+                            }
 
                             var currentTarget = (Unit)npc.CurrentTarget;
                             currentTarget.Hp = 0;
@@ -150,7 +153,9 @@ namespace AAEmu.Game.Models.Game.Units
                     case Character character:
                         {
                             if (character.CurrentTarget == null)
+                            {
                                 return;
+                            }
 
                             var currentTarget = (Unit)character.CurrentTarget;
                             character.StopCombo(true);
@@ -164,7 +169,9 @@ namespace AAEmu.Game.Models.Game.Units
 
                             var lootDropItems = ItemManager.Instance.CreateLootDropItems(currentTarget.ObjId);
                             if (lootDropItems.Count > 0)
+                            {
                                 character.BroadcastPacket(new SCLootableStatePacket(currentTarget.ObjId, true), true);
+                            }
 
                             character.BroadcastPacket(new SCAiAggroPacket(currentTarget.ObjId, 0), true);
                             character.BroadcastPacket(new SCCombatClearedPacket(currentTarget.ObjId), true);
@@ -181,7 +188,9 @@ namespace AAEmu.Game.Models.Game.Units
         private async void StopAutoSkill()
         {
             if (AutoAttackTask != null)
+            {
                 await AutoAttackTask.Cancel();
+            }
 
             AutoAttackTask = null;
             IsAutoAttack = false; // turned off auto attack
@@ -194,7 +203,9 @@ namespace AAEmu.Game.Models.Game.Units
         public void StartRegen()
         {
             if (_regenTask != null || Hp >= MaxHp && Mp >= MaxMp || Hp <= 0)
+            {
                 return;
+            }
 
             _regenTask = new UnitPointsRegenTask(this);
             TaskManager.Instance.Schedule(_regenTask, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
@@ -203,7 +214,9 @@ namespace AAEmu.Game.Models.Game.Units
         public async void StopRegen()
         {
             if (_regenTask == null)
+            {
                 return;
+            }
 
             await _regenTask.Cancel();
             _regenTask = null;
@@ -216,22 +229,30 @@ namespace AAEmu.Game.Models.Game.Units
                 _comboTask = new UnitComboTask(this);
                 TaskManager.Instance.Schedule(_comboTask, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
                 if (this is Character character)
+                {
                     character.SendPacket(new SCCombatEngagedPacket(ObjId));
+                }
             }
 
             if (attacker == null)
+            {
                 return;
+            }
 
             var temp = (attacker, DateTime.Now);
             lock (ComboUnits)
             {
                 if (ComboUnits.ContainsKey(attacker.ObjId))
+                {
                     ComboUnits[attacker.ObjId] = temp;
+                }
                 else
                 {
                     ComboUnits.TryAdd(attacker.ObjId, temp);
                     if (attacker is Character character)
+                    {
                         character.SendPacket(new SCCombatEngagedPacket(ObjId));
+                    }
                 }
             }
         }
@@ -239,21 +260,31 @@ namespace AAEmu.Game.Models.Game.Units
         public async void StopCombo(bool force = false)
         {
             if (_comboTask == null)
+            {
                 return;
+            }
+
             await _comboTask.Cancel();
             _comboTask = null;
 
             if (this is Character character)
+            {
                 character.SendPacket(new SCCombatClearedPacket(ObjId));
+            }
 
             lock (ComboUnits)
             {
                 foreach (var (unit, _) in ComboUnits.Values)
                 {
                     if (force)
+                    {
                         unit.TryRemoveComboUnit(ObjId);
+                    }
+
                     if (unit is Character temp)
+                    {
                         temp.SendPacket(new SCCombatClearedPacket(ObjId));
+                    }
                 }
 
                 ComboUnits.Clear();
@@ -293,13 +324,17 @@ namespace AAEmu.Game.Models.Game.Units
         public override void RemoveBonus(uint bonusIndex, UnitAttribute attribute)
         {
             if (!Bonuses.ContainsKey(bonusIndex))
+            {
                 return;
+            }
 
             var bonuses = Bonuses[bonusIndex];
             foreach (var bonus in new List<Bonus>(bonuses))
             {
                 if (bonus.Template != null && bonus.Template.Attribute == attribute)
+                {
                     bonuses.Remove(bonus);
+                }
             }
         }
 
@@ -307,14 +342,18 @@ namespace AAEmu.Game.Models.Game.Units
         {
             var result = new List<Bonus>();
             if (Bonuses == null)
+            {
                 return result;
+            }
 
             foreach (var bonuses in new List<List<Bonus>>(Bonuses.Values))
             {
                 foreach (var bonus in new List<Bonus>(bonuses))
                 {
                     if (bonus.Template != null && bonus.Template.Attribute == attribute)
+                    {
                         result.Add(bonus);
+                    }
                 }
             }
             return result;
@@ -329,18 +368,20 @@ namespace AAEmu.Game.Models.Game.Units
         {
             SendPacket(new SCErrorMsgPacket(type, 0, true));
         }
-        
+
         public bool CheckSkillCooldownsOkay(SkillTemplate template)
         {
             if (GetSkillCooldown(template.Id, template.IgnoreGlobalCooldown) > 0)
+            {
                 return false;
+            }
 
             //if (template.SkillControllerId > 0 && !CheckActiveController(template.SkillControllerId))
             //return false;
 
             return true;
         }
-        
+
         public int GetSkillCooldown(uint skillId, bool ignoreGCD = false)
         {
             int maxCooldown = Math.Max(ignoreGCD ? 0 : ((TimeSpan)(GlobalCooldown - DateTime.Now)).Milliseconds, Cooldowns.ContainsKey(skillId) ? ((TimeSpan)(Cooldowns[skillId] - DateTime.Now)).Milliseconds : 0);
@@ -351,7 +392,9 @@ namespace AAEmu.Game.Models.Game.Units
         {
             var cooldownToAdd = skillTemplate.CooldownTime;
             if (customCooldown > 0)
+            {
                 cooldownToAdd = customCooldown;
+            }
 
             ActiveControllerId = skillTemplate.SkillControllerId;
 
@@ -374,12 +417,18 @@ namespace AAEmu.Game.Models.Game.Units
         public void UpdateGlobalCooldown(SkillTemplate skillTemplate)
         {
             if (skillTemplate == null)
+            {
                 return;
+            }
 
             if (!skillTemplate.DefaultGcd)
+            {
                 GlobalCooldown = DateTime.Now.AddMilliseconds(skillTemplate.CustomGcd);
+            }
             else
+            {
                 GlobalCooldown = DateTime.Now.AddMilliseconds(1000); //TODO: GlobalCooldown Calculations
+            }
 
             if (this is Character)
             {

@@ -1,8 +1,9 @@
 ﻿using System;
-
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units.Movements;
+using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Models.Game.Units.Route
 {
@@ -16,11 +17,13 @@ namespace AAEmu.Game.Models.Game.Units.Route
     /// </summary>
     public class Circular : Patrol
     {
-        public sbyte Radius { get; set; } = 5;
+        public sbyte Radius { get; set; } = 2; //5;
         public short Degree { get; set; } = 180;
 
         public override void Execute(Npc npc)
         {
+            var x = npc.Position.X;
+            var y = npc.Position.Y;
             // debug by Yanlongli date 2019.04.18
             // 将自己的移动赋予选择的对象 跟随自己一起移动
             // Give your own movement to the selected object, move with yourself
@@ -41,8 +44,6 @@ namespace AAEmu.Game.Models.Game.Units.Route
 
             // 改变NPC坐标
             // Changing NPC coordinates
-            moveType.Z = npc.Position.Z;
-            moveType.RotationZ = npc.Position.RotationZ;
             moveType.Flags = 5;
             moveType.DeltaMovement = new sbyte[3];
             moveType.DeltaMovement[0] = 0;
@@ -58,6 +59,14 @@ namespace AAEmu.Game.Models.Game.Units.Route
             moveType.X = npc.Position.X = npc.Spawner.Position.X + (float)Math.Sin(hudu) * Radius;
             moveType.Y = npc.Position.Y = npc.Spawner.Position.Y + Radius - (float)Math.Cos(hudu) * Radius;
 
+            moveType.Z = npc.Position.Z;
+            moveType.Z = AppConfiguration.Instance.HeightMapsEnable ? WorldManager.Instance.GetHeight(npc.Position.ZoneId, npc.Position.X, npc.Position.Y) : npc.Position.Z;
+            var angle = MathUtil.CalculateAngleFrom(x, y, npc.Position.X, npc.Position.Y);
+            var rotZ = MathUtil.ConvertDegreeToDirection(angle);
+            moveType.RotationX = 0;
+            moveType.RotationY = 0;
+            moveType.RotationZ = rotZ;
+
             // 广播移动状态
             // Broadcasting Mobile State
             npc.BroadcastPacket(new SCOneUnitMovementPacket(npc.ObjId, moveType), true);
@@ -65,7 +74,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
             // If the number of executions is less than the angle, continue adding tasks or stop moving
             if (Count < Degree)
             {
-                Repet(npc);
+                Repeat(npc);
             }
             else
             {
