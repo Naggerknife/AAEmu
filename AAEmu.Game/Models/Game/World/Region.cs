@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.Units.Route;
+
 using NLog;
 
 namespace AAEmu.Game.Models.Game.World
@@ -34,7 +39,10 @@ namespace AAEmu.Game.Models.Game.World
         public void AddObject(GameObject obj)
         {
             if (obj == null)
+            {
                 return;
+            }
+
             lock (_objectsLock)
             {
                 if (_objects == null)
@@ -55,10 +63,14 @@ namespace AAEmu.Game.Models.Game.World
                 obj.Position.WorldId = _worldId;
                 var zoneId = WorldManager.Instance.GetZoneId(_worldId, obj.Position.X, obj.Position.Y);
                 if (zoneId > 0)
+                {
                     obj.Position.ZoneId = zoneId;
+                }
 
                 if (obj is Character)
+                {
                     _charactersSize++;
+                }
             }
         }
 
@@ -118,10 +130,83 @@ namespace AAEmu.Game.Models.Game.World
                 var units = GetList(new List<Unit>(), character1.ObjId);
                 foreach (var t in units)
                 {
-                    character1.SendPacket(new SCUnitStatePacket(t));
-                    if (t is House house)
+                    if (t is Npc npc)
                     {
-                        character1.SendPacket(new SCHouseStatePacket(house));
+                        // включаем движение видимых NPC
+                        if (npc.TemplateId == 3492 || npc.TemplateId == 3475 || npc.TemplateId == 3464 ||
+                            npc.TemplateId == 916 || npc.TemplateId == 11951 || npc.TemplateId == 7674 ||
+                            npc.TemplateId == 7648 || npc.TemplateId == 7677 || npc.TemplateId == 7676 ||
+                            npc.TemplateId == 7673 || npc.TemplateId == 4499 || npc.TemplateId == 4498 ||
+                            npc.TemplateId == 4500 || npc.TemplateId == 3451)
+                        //if (npc.TemplateId > 0 && npc.TemplateId < 10000)
+                        {
+                            if (npc.Patrol == null)
+                            {
+                                Patrol patrol = null;
+                                var rnd = Rand.Next(0, 600);
+                                if (rnd > 510)
+                                {
+                                    //NPC медленно шевелятся
+                                   var stirring = new Stirring() { Interrupt = true, Loop = true, Abandon = false };
+                                    stirring.Degree = (short)Rand.Next(180, 360);
+                                    patrol = stirring;
+                                }
+                                else if (rnd > 410)
+                                {
+                                    // NPC движутся по квадрату
+                                    var square = new Square() { Interrupt = true, Loop = true, Abandon = false };
+                                    square.Degree = (short)Rand.Next(180, 360);
+                                    patrol = square;
+                                }
+                                else if (rnd > 310)
+                                {
+                                    // NPC движутся по кругу
+                                    patrol = new Circular() { Interrupt = true, Loop = true, Abandon = false };
+                                }
+                                else if (rnd > 210)
+                                {
+                                    //NPC дерганно двигаются
+                                    var jerky = new Jerky { Interrupt = true, Loop = true, Abandon = false };
+                                    jerky.Degree = (short)Rand.Next(180, 360);
+                                    patrol = jerky;
+                                }
+                                else if (rnd > 110)
+                                {
+                                    //NPC движутся по ткацкому челноку по оси Y
+                                    var quill = new QuillY { Interrupt = true, Loop = true, Abandon = false };
+                                    quill.Degree = (short)Rand.Next(180, 360);
+                                    patrol = quill;
+                                }
+                                else if (rnd > 10)
+                                {
+                                    //NPC движутся по ткацкому челноку по оси Y
+                                    var quill = new QuillX { Interrupt = true, Loop = true, Abandon = false };
+                                    quill.Degree = (short)Rand.Next(180, 360);
+                                    patrol = quill;
+                                }
+                                else if (rnd <= 10)
+                                {
+                                    // NPC стоят на месте
+                                    npc.Patrol = null;
+                                }
+                                if (patrol != null)
+                                {
+                                    patrol.Pause(npc);
+                                    npc.Patrol = patrol;
+                                    npc.Patrol.LastPatrol = null;
+                                    patrol.Recovery(npc);
+                                }
+                            }
+                        }
+                        character1.SendPacket(new SCUnitStatePacket(npc));
+                    }
+                    else
+                    {
+                        character1.SendPacket(new SCUnitStatePacket(t));
+                        if (t is House house)
+                        {
+                            character1.SendPacket(new SCHouseStatePacket(house));
+                        }
                     }
                 }
                 var doodads = GetList(new List<Doodad>(), character1.ObjId).ToArray();
@@ -150,6 +235,15 @@ namespace AAEmu.Game.Models.Game.World
             if (obj is Character character1)
             {
                 var unitIds = GetListId<Unit>(new List<uint>(), character1.ObjId).ToArray();
+                var units = GetList(new List<Unit>(), character1.ObjId);
+                foreach (var t in units)
+                {
+                    if (t is Npc npc)
+                    {
+                        npc.Patrol = null;
+                    }
+                }
+
                 for (var offset = 0; offset < unitIds.Length; offset += 500)
                 {
                     var length = unitIds.Length - offset;
@@ -212,7 +306,10 @@ namespace AAEmu.Game.Models.Game.World
             lock (_objectsLock)
             {
                 if (_objects == null || _objectsSize == 0)
+                {
                     return result;
+                }
+
                 temp = new GameObject[_objectsSize];
                 Array.Copy(_objects, 0, temp, 0, _objectsSize);
             }

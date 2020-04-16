@@ -1,5 +1,4 @@
 ﻿using System;
-
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.NPChar;
@@ -8,15 +7,13 @@ using AAEmu.Game.Models.Game.Units.Route;
 
 namespace AAEmu.Game.Models.Game.Units
 {
-    public class Combat : Patrol
+    class Combat : Patrol
     {
         readonly float _distance = 1.5f;
         public override void Execute(Npc npc)
         {
             if (npc == null)
-            {
                 return;
-            }
 
             // If we are killed, the NPC goes to the place of spawn
             var trg = (Unit)npc.CurrentTarget;
@@ -38,7 +35,7 @@ namespace AAEmu.Game.Models.Game.Units
                 // Uninterruptible, unaffected by external forces and attacks, similar to being out of combat
                 var line = new Line
                 {
-                    Interrupt = false,
+                    Interrupt = true,
                     Loop = false,
                     Abandon = false
                 };
@@ -59,9 +56,7 @@ namespace AAEmu.Game.Models.Game.Units
                     maxXYZ = Math.Max(Math.Max(Math.Abs(x), Math.Abs(y)), Math.Abs(z));
                 }
                 else
-                {
                     maxXYZ = _distance + 1f;
-                }
 
                 // 如果最大值超过distance 则放弃攻击转而进行追踪
                 // If the maximum value exceeds distance, the attack is abandoned and the tracking is followed.

@@ -2,8 +2,7 @@
 
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Models.Game.NPChar;
-using AAEmu.Game.Models.Game.Units.Route;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Tasks.UnitMove;
 
@@ -13,7 +12,7 @@ namespace AAEmu.Game.Models.Game.Units
     /// Unit 巡逻类
     /// Unit Patrol Class
     /// </summary>
-    public abstract class Patrol
+    public abstract class PatrolCharacter
     {
         /// <summary>
         /// 是否正在执行巡逻任务
@@ -75,138 +74,134 @@ namespace AAEmu.Game.Models.Game.Units
         /// 上次任务
         /// Last mission
         /// </summary>
-        public Patrol LastPatrol { get; set; }
+        public PatrolCharacter LastPatrol { get; set; }
 
         /// <summary>
         /// 放弃任务 / Abandon mission
         /// </summary>
         public bool Abandon { get; set; } = false;
-        public const float tolerance = 0;
-
 
         /// <summary>
         /// 执行巡逻任务
         /// Perform patrol missions
         /// </summary>
-        /// <param name="npc"></param>
-        public void Apply(Npc npc)
+        /// <param name="ch"></param>
+        public void Apply(Character ch)
         {
             //如果NPC不存在或不处于巡航模式或者当前执行次数不为0
             //If NPC does not exist or is not in cruise mode or the current number of executions is not zero
-            if (npc.Patrol == null || (npc.Patrol.Running == false && this != npc.Patrol) || (npc.Patrol.Running == true && this == npc.Patrol))
+            //if (ch.Patrol == null || ch.Patrol.Running == false && this != ch.Patrol || ch.Patrol.Running && this == ch.Patrol)
             {
                 //如果上次巡航模式处于暂停状态则保存上次巡航模式
                 //If the last cruise mode is suspended, save the last cruise mode
-                if (npc.Patrol != null && npc.Patrol != this && !npc.Patrol.Abandon)
+                if (ch.Patrol != null && ch.Patrol != this && !ch.Patrol.Abandon)
                 {
-                    LastPatrol = npc.Patrol;
+                    LastPatrol = ch.Patrol;
                 }
-                ++Count;
-                //++Seq;
-                Seq = (uint)Rand.Next(0, 10000);
+                //++Count;
+                Count += 2;
+                ++Seq; //Seq = (uint)Rand.Next(0, 10000);
                 Running = true;
-                npc.Patrol = this;
-                Execute(npc);
+                ch.Patrol = this;
+                Execute(ch);
             }
         }
 
-        public abstract void Execute(Npc npc);
+        public abstract void Execute(Character ch);
 
         /// <summary>
         /// 再次执行任务
         /// Perform the task again
         /// </summary>
-        /// <param name="npc"></param>
+        /// <param name="ch"></param>
         /// <param name="time"></param>
         /// <param name="patrol"></param>
-        public void Repeat(Npc npc, double time = 100, Patrol patrol = null)
+        public void Repeat(Character ch, double time = 100, PatrolCharacter patrol = null)
         {
             if (!(patrol ?? this).Abandon)
             {
-                TaskManager.Instance.Schedule(new UnitMove(patrol ?? this, npc), TimeSpan.FromMilliseconds(time));
+                TaskManager.Instance.Schedule(new CharMove(patrol ?? this, ch), TimeSpan.FromMilliseconds(time));
             }
         }
 
-        public bool PauseAuto(Npc npc)
+        public bool PauseAuto(Character ch)
         {
-            if (Interrupt || !npc.Patrol.Running)
+            if (!Interrupt && ch.Patrol.Running)
             {
-                Pause(npc);
-                return true;
+                return false;
             }
-            return false;
+
+            Pause(ch);
+            return true;
         }
 
-        public void Pause(Npc npc)
+        public void Pause(Character ch)
         {
             Running = false;
-            PausePosition = npc.Position.Clone();
+            PausePosition = ch.Position.Clone();
         }
 
-        public void Stop(Npc npc)
+        public void Stop(Character ch)
         {
             Running = false;
             Abandon = true;
 
-            Recovery(npc);
+            Recovery(ch);
         }
 
-        public void Recovery(Npc npc)
+        public void Recovery(Character ch)
         {
             // 如果当前巡航处于暂停状态则恢复当前巡航
             // Resume current cruise if current cruise is paused
             if (!Abandon && Running == false)
             {
-                npc.Patrol.Running = true;
-                Repeat(npc);
+                ch.Patrol.Running = true;
+                Repeat(ch);
                 return;
             }
             // 如果上次巡航不为null
             // If the last cruise is not null
-            if (LastPatrol != null && Running == false)
+            const float tolerance = 0.1f;
+            if (LastPatrol == null || Running)
             {
-                if (npc.Position.X == LastPatrol.PausePosition.X && npc.Position.Y == LastPatrol.PausePosition.Y && npc.Position.Z == LastPatrol.PausePosition.Z)
-                {
-                    LastPatrol.Running = true;
-                    npc.Patrol = LastPatrol;
-                    // 恢复上次巡航
-                    // Resume last cruise
-                    Repeat(npc, 500, LastPatrol);
-                }
-                else
-                {
-                    // 创建直线巡航回归上次巡航暂停点
-                    // Create a straight cruise to return to the last cruise pause
-                    var line = new Line();
-                    // 不可中断，不受外力及攻击影响 类似于处于脱战状态
-                    // Uninterrupted, unaffected by external forces and attacks
-                    line.Interrupt = false;
-                    line.Loop = false;
-                    line.LastPatrol = LastPatrol;
-                    // 指定目标Point
-                    // Specify target point
-                    line.Position = LastPatrol.PausePosition;
-                    // 恢复上次巡航
-                    // Resume last cruise
-                    Repeat(npc, 500, line);
-                }
+                return;
+            }
+
+            if (
+                Math.Abs(ch.Position.X - LastPatrol.PausePosition.X) < tolerance
+                &&
+                Math.Abs(ch.Position.Y - LastPatrol.PausePosition.Y) < tolerance
+                &&
+                Math.Abs(ch.Position.Z - LastPatrol.PausePosition.Z) < tolerance
+            )
+            {
+                LastPatrol.Running = true;
+                ch.Patrol = LastPatrol;
+                // 恢复上次巡航
+                // Resume last cruise
+                Repeat(ch, 500, LastPatrol);
+            }
+            else
+            {
+                // 创建直线巡航回归上次巡航暂停点
+                // Create a straight cruise to return to the last cruise pause
+                Stop(ch);
             }
         }
 
-        public void LoopAuto(Npc npc)
+        public void LoopAuto(Character ch)
         {
             if (Loop)
             {
                 Count = 0;
-                //Seq = 0;
-                Seq = (uint)Rand.Next(0, 10000);
-                Repeat(npc, LoopDelay);
+                Seq = (uint)Rand.Next(0, 10000); // = 0
+                Repeat(ch, LoopDelay);
             }
             else
             {
                 // 非循环任务则终止本任务并尝试恢复上次任务
                 // Acyclic tasks terminate this task and attempt to resume the last task
-                Stop(npc);
+                Stop(ch);
             }
         }
     }

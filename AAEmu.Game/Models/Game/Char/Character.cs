@@ -51,6 +51,8 @@ namespace AAEmu.Game.Models.Game.Char
         private bool _inParty;
         private bool _isOnline;
 
+        public PatrolCharacter Patrol { get; set; }
+
         //public GameConnection Connection { get; set; }
         public List<IDisposable> Subscribers { get; set; }
         public uint Id { get; set; }

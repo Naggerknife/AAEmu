@@ -4,13 +4,10 @@ using System.IO;
 using System.Linq;
 
 using AAEmu.Commons.Utils;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.Char.Templates;
-using AAEmu.Game.Models.Game.NPChar;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units.Movements;
 using AAEmu.Game.Models.Game.World;
-using AAEmu.Game.Models.Tasks.UnitMove;
 using AAEmu.Game.Utils;
 
 using NLog;
@@ -25,19 +22,18 @@ namespace AAEmu.Game.Models.Game.Units.Route
     /// 控制NPC按照这种路线进行移动
     /// Control NPC to move along this route
     /// </summary>
-    public class Simulation : Patrol
+    public class SimulationChar : PatrolCharacter
     {
-        public Simulation(Npc npc)
+        public SimulationChar(Character ch)
         {
-            Init(npc);
+            Position = new Point();
+            Init(ch);
         }
 
         private static Logger _log = LogManager.GetCurrentClassLogger();
 
+        const double tolerance = 0.1f;
         public float myX, myY, myZ; // наши статы
-
-        public LineTo Line { get; set; }
-
         //// movement data
         public List<string> MovePath;     //  данные по которому мы будем двигатся в данный момент
         public List<string> RecordPath;   //  данные для записи пути
@@ -99,16 +95,17 @@ namespace AAEmu.Game.Models.Game.Units.Route
 
         float distance = 1.5f;
         float MovingDistance = 0.27f;
+        public Point Position { get; set; }
 
-        public override void Execute(Npc npc)
+        public override void Execute(Character ch)
         {
-            OnMove(npc);
+            OnMove(ch);
         }
         //***************************************************************
         //ПЕРЕМЕЩЕНИЕ:
         //Идти в точку с координатами x,y,z
-        //MOVETO(npc, x, y, z)
-        public void MoveTo(Npc npc, float TargetX, float TargetY, float TargetZ)
+        //MOVETO(ch, x, y, z)
+        public void MoveTo(Character ch, float TargetX, float TargetY, float TargetZ)
         {
             var Seq = (uint)Rand.Next(0, 10000);
             var moveType = (UnitMoveType)MoveType.GetType(MoveTypeEnum.Unit);
@@ -117,7 +114,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
             moveType.Y = TargetY;
             moveType.Z = TargetZ;
             //--------------------взгляд_персонажа_будет(движение_куда<-движение_откуда)
-            var angle = MathUtil.CalculateAngleFrom(TargetX, TargetY, npc.Position.X, npc.Position.Y);
+            var angle = MathUtil.CalculateAngleFrom(TargetX, TargetY, ch.Position.X, ch.Position.Y);
             var rotZ = MathUtil.ConvertDegreeToDirection(angle);
             moveType.RotationX = 0;
             moveType.RotationY = 0;
@@ -132,12 +129,13 @@ namespace AAEmu.Game.Models.Game.Units.Route
             moveType.Alertness = 0; //idle=0, combat=2
             moveType.Time = Seq;
 
-            npc.BroadcastPacket(new SCOneUnitMovementPacket(npc.ObjId, moveType), true);
+            //ch.BroadcastPacket(new SCOneUnitMovementPacket(ch.ObjId, moveType), true);
 
-            //npc.SendPacket(new SCOneUnitMovementPacket(npc.ObjId, moveType));
+            ch.SendPacket(new SCOneUnitMovementPacket(ch.ObjId, moveType));
 
-            //npc.DisabledSetPosition = true;
-            //npc.SendPacket(new SCTeleportUnitPacket(0, 0, TargetX, TargetY, TargetZ, 0f));
+            ch.DisabledSetPosition = true;
+            ch.SendPacket(new SCTeleportUnitPacket(0, 0, TargetX, TargetY, TargetZ, 0f));
+            ch.SendMessage("[Move] X: {0}, Y: {1}, Z: {2}", TargetX, TargetY, TargetZ);
 
         }
 
@@ -158,11 +156,11 @@ namespace AAEmu.Game.Models.Game.Units.Route
         }
         //***************************************************************
         //Ориентация на местности: Проверка находится ли заданная точка в пределах досягаемости
-        //public bool PosInRange(Npc npc, float targetX, float targetY, float targetZ, int distance)
+        //public bool PosInRange(Character ch, float targetX, float targetY, float targetZ, int distance)
         //***************************************************************
-        public bool PosInRange(Npc npc, float targetX, float targetY, int distance)
+        public bool PosInRange(Character ch, float targetX, float targetY, int distance)
         {
-            return Delta(targetX, targetY, npc.Position.X, npc.Position.Y) <= distance;
+            return Delta(targetX, targetY, ch.Position.X, ch.Position.Y) <= distance;
         }
         //***************************************************************
         public string GetValue(string valName)
@@ -203,7 +201,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
             return result;
         }
         //***************************************************************
-        public int GetMinCheckPoint(Npc npc, List<string> pointsList)
+        public int GetMinCheckPoint(Character ch, List<string> pointsList)
         {
             int m, minDist;
             string s;
@@ -220,12 +218,12 @@ namespace AAEmu.Game.Models.Game.Units.Route
             for (var i = 0; i < pointsList.Count - 1; i++)
             {
                 s = pointsList[i];
-                Line.Position.Y = ExtractValue(s, 2);
-                Line.Position.X = ExtractValue(s, 1);
+                Position.Y = ExtractValue(s, 2);
+                Position.X = ExtractValue(s, 1);
 
-                _log.Warn(s + " x:=" + Line.Position.X + " y:=" + Line.Position.Y);
+                _log.Warn(s + " x:=" + Position.X + " y:=" + Position.Y);
 
-                m = Delta(Line.Position.X, Line.Position.Y, npc.Position.X, npc.Position.Y);
+                m = Delta(Position.X, Position.Y, ch.Position.X, ch.Position.Y);
 
                 if (m <= 0) { continue; }
 
@@ -290,19 +288,19 @@ namespace AAEmu.Game.Models.Game.Units.Route
             return result;
         }
         //***************************************************************
-        public void ParseMoveClient(Npc npc)
+        public void ParseMoveClient(Character ch)
         {
             if (!SavePathEnabled) { return; }
-            Line.Position.X = npc.Position.X;
-            Line.Position.Y = npc.Position.Y;
-            Line.Position.Z = npc.Position.Z;
-            var s = "|" + Line.Position.X + "|" + Line.Position.Y + "|" + Line.Position.Z + "|";
+            Position.X = ch.Position.X;
+            Position.Y = ch.Position.Y;
+            Position.Z = ch.Position.Z;
+            var s = "|" + Position.X + "|" + Position.Y + "|" + Position.Z + "|";
             RecordPath.Add(s);
             PointsCount++;
             _log.Warn("добавлен чекпоинт № {0}", PointsCount);
         }
         //***************************************************************
-        public void GoToPath(Npc npc, bool ToForward)
+        public void GoToPath(Character ch, bool ToForward)
         {
             MoveToPathEnabled = !MoveToPathEnabled;
             MoveToForward = ToForward;
@@ -310,50 +308,51 @@ namespace AAEmu.Game.Models.Game.Units.Route
             {
                 //MoveTimer.Enabled:=False;
                 _log.Warn("Следование по маршруту остановлено");
-                Line.Stop(npc);
+                Stop(ch);
                 return;
             }
             //предположительно путь уже прописан в MovePath
             _log.Warn("Пробуем выйти на путь...");
             //сперва идем к ближайшему чекпоинту
-            var i = GetMinCheckPoint(npc, MovePath);
+            var i = GetMinCheckPoint(ch, MovePath);
             if (i < 0)
             {
                 _log.Warn("чекпоинт не найден");
                 MoveToPathEnabled = false;
-                Line.Stop(npc);
-                return;
+                Stop(ch);
             }
-
-            _log.Warn("найден ближайший чекпоинт #" + i + " бежим туда");
-            MoveToPathEnabled = true;
-            MoveStepIndex = i;
-            _log.Warn("checkpoint #" + i);
-            var s = MovePath[MoveStepIndex];
-            Line.Position.X = ExtractValue(s, 1);
-            Line.Position.Y = ExtractValue(s, 2);
-            Line.Position.Z = ExtractValue(s, 3);
-            if (Math.Abs(oldX - Line.Position.X) > tolerance && Math.Abs(oldY - Line.Position.Y) > tolerance && Math.Abs(oldZ - Line.Position.Z) > tolerance)
+            else
             {
-                //MoveTo(npc, Line.Position.X, Line.Position.Y, Line.Position.Z);
-                oldX = Line.Position.X;
-                oldY = Line.Position.Y;
-                oldZ = Line.Position.Z;
-                oldTime = 0;
+                _log.Warn("найден ближайший чекпоинт #" + i + " бежим туда");
+                MoveToPathEnabled = true;
+                MoveStepIndex = i;
+                _log.Warn("checkpoint #" + i);
+                var s = MovePath[MoveStepIndex];
+                Position.X = ExtractValue(s, 1);
+                Position.Y = ExtractValue(s, 2);
+                Position.Z = ExtractValue(s, 3);
+                if (Math.Abs(oldX - Position.X) > tolerance && Math.Abs(oldY - Position.Y) > tolerance && Math.Abs(oldZ - Position.Z) > tolerance)
+                {
+                    MoveTo(ch, Position.X, Position.Y, Position.Z);
+                    oldX = Position.X;
+                    oldY = Position.Y;
+                    oldZ = Position.Z;
+                    oldTime = 0;
+                }
             }
             //MoveTimer.Enabled:=True; // TODO
-            MoveTo(npc, Line.Position.X, Line.Position.Y, Line.Position.Z);
-            Repeat(npc, 1000, Line);
+            LoopDelay = 1000;
+            Repeat(ch, LoopDelay);
             chkTime = 0;
         }
         //***************************************************************
-        public void OnMove(Npc npc)
+        public void OnMove(Character ch)
         {
             if (!MoveToPathEnabled)
             {
                 //TTimer(Sender).Enabled:=False;
                 _log.Warn("OnMove disabled");
-                Line.Stop(npc);
+                Stop(ch);
                 return;
             }
             try
@@ -364,17 +363,17 @@ namespace AAEmu.Game.Models.Game.Units.Route
             {
                 //TTimer(Sender).Enabled:=False;
                 _log.Warn("Error: {0}", e);
-                Line.Stop(npc);
+                Stop(ch);
                 return;
             }
             var s = MovePath[MoveStepIndex];
-            Line.Position.X = ExtractValue(s, 1);
-            Line.Position.Y = ExtractValue(s, 2);
-            Line.Position.Z = ExtractValue(s, 3);
-            if (!PosInRange(npc, Line.Position.X, Line.Position.Y, 1))
+            Position.X = ExtractValue(s, 1);
+            Position.Y = ExtractValue(s, 2);
+            Position.Z = ExtractValue(s, 3);
+            if (!PosInRange(ch, Position.X, Position.Y, 1))
             {
-                MoveTo(npc, Line.Position.X, Line.Position.Y, Line.Position.Z);
-                Repeat(npc, 1000, Line);
+                MoveTo(ch, Position.X, Position.Y, Position.Z);
+                Repeat(ch, 1000, this);
                 return;
             }
             if (MoveToForward)
@@ -383,7 +382,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
                 {
                     MoveToPathEnabled = false;
                     _log.Warn("Мы по идее в конечной точке");
-                    Line.Stop(npc);
+                    Stop(ch);
                     return;
                 }
                 MoveStepIndex++;
@@ -398,32 +397,30 @@ namespace AAEmu.Game.Models.Game.Units.Route
                 {
                     MoveToPathEnabled = false;
                     _log.Warn("Мы по идее в начальной точке");
-                    Line.Stop(npc);
+                    Stop(ch);
                     return;
                 }
                 //end;
                 _log.Warn("мы достигли чекпоинта идем далее");
                 _log.Warn("бежим к #" + MoveStepIndex);
                 s = MovePath[MoveStepIndex];
-                Line.Position.X = ExtractValue(s, 1);
-                Line.Position.Y = ExtractValue(s, 2);
-                Line.Position.Z = ExtractValue(s, 3);
+                Position.X = ExtractValue(s, 1);
+                Position.Y = ExtractValue(s, 2);
+                Position.Z = ExtractValue(s, 3);
+                MoveTo(ch, Position.X, Position.Y, Position.Z);
             }
-            MoveTo(npc, Line.Position.X, Line.Position.Y, Line.Position.Z);
-            Repeat(npc, 1000, Line);
+            Repeat(ch, 1000, this);
         }
+        //public void Repeat(Character ch, double time = 100, Simulation onmove = null)
+        //{
+        //    if (!(onmove ?? this).Abandon)
+        //    {
+        //        TaskManager.Instance.Schedule(new UnitMove(onmove ?? this, ch), TimeSpan.FromMilliseconds(time));
+        //    }
+        //}
 
-        public void Init(Npc npc) //Вызывается при включении скрипта
+        public void Init(Character ch) //Вызывается при включении скрипта
         {
-            Line = new LineTo
-            {
-                Interrupt = true,
-                Loop = false,
-                LastPatrol = Line,
-                Position = npc.Position.Clone()
-            };
-            npc.Patrol = Line;
-
             try
             {
                 MovePath = new List<string>();
@@ -432,7 +429,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
             catch (Exception e)
             {
                 _log.Warn("Error in read MovePath: {0}", e);
-                Line.Stop(npc);
+                Stop(ch);
             }
 
             try
@@ -443,8 +440,9 @@ namespace AAEmu.Game.Models.Game.Units.Route
             catch (Exception e)
             {
                 _log.Warn("Error in read RecordPath: {0}", e);
-                Line.Stop(npc);
+                Stop(ch);
             }
         }
+
     }
 }
