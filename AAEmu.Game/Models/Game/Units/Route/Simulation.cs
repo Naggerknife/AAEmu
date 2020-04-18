@@ -494,7 +494,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
             if (!MoveToPathEnabled)
             {
                 _log.Warn("OnMove disabled");
-                MoveToPathEnabled = false;
+                StopMove(npc);
                 return;
             }
             try

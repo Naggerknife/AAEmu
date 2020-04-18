@@ -85,10 +85,7 @@ namespace AAEmu.Game
             AccessLevelManager.Instance.Load();
             CashShopManager.Instance.Load();
             MailManager.Instance.Load();
-
             DuelManager.Instance.Initialize();
-            AiManager.Instance.Initialize();
-            
             ScriptCompiler.Compile();
 
             TimeManager.Instance.Start();
