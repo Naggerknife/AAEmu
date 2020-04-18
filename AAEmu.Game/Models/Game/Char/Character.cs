@@ -15,6 +15,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.Units.Route;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Utils.DB;
 
@@ -51,8 +52,7 @@ namespace AAEmu.Game.Models.Game.Char
         private bool _inParty;
         private bool _isOnline;
 
-        public PatrolCharacter Patrol { get; set; }
-
+        public new PatrolCharacter Patrol { get; set; }
         //public GameConnection Connection { get; set; }
         public List<IDisposable> Subscribers { get; set; }
         public uint Id { get; set; }

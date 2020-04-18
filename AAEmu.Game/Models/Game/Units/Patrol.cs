@@ -81,7 +81,7 @@ namespace AAEmu.Game.Models.Game.Units
         /// 放弃任务 / Abandon mission
         /// </summary>
         public bool Abandon { get; set; } = false;
-        public const float tolerance = 0;
+        public const float tolerance = 0.5f;
 
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace AAEmu.Game.Models.Game.Units
                     var line = new Line();
                     // 不可中断，不受外力及攻击影响 类似于处于脱战状态
                     // Uninterrupted, unaffected by external forces and attacks
-                    line.Interrupt = false;
+                    line.Interrupt = true;
                     line.Loop = false;
                     line.LastPatrol = LastPatrol;
                     // 指定目标Point

@@ -133,12 +133,14 @@ namespace AAEmu.Game.Models.Game.World
                     if (t is Npc npc)
                     {
                         // включаем движение видимых NPC
-                        if (npc.TemplateId == 3492 || npc.TemplateId == 3475 || npc.TemplateId == 3464 ||
-                            npc.TemplateId == 916 || npc.TemplateId == 11951 || npc.TemplateId == 7674 ||
-                            npc.TemplateId == 7648 || npc.TemplateId == 7677 || npc.TemplateId == 7676 ||
-                            npc.TemplateId == 7673 || npc.TemplateId == 4499 || npc.TemplateId == 4498 ||
-                            npc.TemplateId == 4500 || npc.TemplateId == 3451)
-                        //if (npc.TemplateId > 0 && npc.TemplateId < 10000)
+                        //if (npc.TemplateId == 3492 || npc.TemplateId == 3475 || npc.TemplateId == 3464 ||
+                        //    npc.TemplateId == 916 || npc.TemplateId == 11951 || npc.TemplateId == 7674 ||
+                        //    npc.TemplateId == 7648 || npc.TemplateId == 7677 || npc.TemplateId == 7676 ||
+                        //    npc.TemplateId == 7673 || npc.TemplateId == 4499 || npc.TemplateId == 4498 ||
+                        //    npc.TemplateId == 4500 || npc.TemplateId == 3451 || npc.TemplateId == 3502 ||
+                        //    npc.TemplateId == 3494 || npc.TemplateId == 3480 || npc.TemplateId == 3460 ||
+                        //    npc.TemplateId == 3495)
+                        if (npc.Faction.GuardHelp == false)
                         {
                             if (npc.Patrol == null)
                             {

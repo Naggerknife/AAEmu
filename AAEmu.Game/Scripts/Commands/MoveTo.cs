@@ -32,7 +32,7 @@ namespace AAEmu.Game.Scripts.Commands
 
         public string GetCommandLineHelp()
         {
-            return "<rec||save||go||back||stop>";
+            return "<rec||save||go||run||walk||back||stop>";
         }
 
         public string GetCommandHelpText()
@@ -46,45 +46,53 @@ namespace AAEmu.Game.Scripts.Commands
                 "2. Take a route;\n" +
                 "3. Stop recording.\n" +
                 "=== here is an example file structure (x, y, z) ===\n" +
-                "| 19007 | 145255 | -3151 |\n" +
-                "| 19016 | 144485 | -3130 |\n" +
-                "| 19124 | 144579 | -3128 |\n" +
-                "| 19112 | 144059 | -3103 |\n" +
+                "|15629,0|14989,02|141,2055|\n" +
+                "|15628,0|14987,24|141,3826|\n" +
+                "|15626,0|14983,88|141,3446|\n" +
                 "===================================================;\n";
         }
         public void Execute(Character character, string[] args)
         {
             if (args.Length < 1)
             {
-                character.SendMessage("[MoveTo] /moveto <rec||save||go||back||stop>");
+                character.SendMessage("[MoveTo] /moveto <rec||save||go||run||walk||back||stop>");
                 return;
             }
             var cmd = args[0];
-            //var newY = float.Parse(args[1]);
-            //var newZ = float.Parse(args[2]);
-
-            //character.DisabledSetPosition = true;
-            //character.SendPacket(new SCTeleportUnitPacket(0, 0, newX, newY, newZ, 0f));
             character.SendMessage("[MoveTo] cmd: {0}", cmd);
-            var moveTo = new Simulation((Npc)character.CurrentTarget);
-
+            var moveTo = character.Simulation; // взять AI движения 
+            moveTo.npc = (Npc)character.CurrentTarget;
             switch (@cmd)
             {
                 case "rec":
+                    character.SendMessage("[MoveTo] начинаем запись...");
+                    moveTo.StartRecord(moveTo, character);
                     break;
                 case "save":
+                    character.SendMessage("[MoveTo] закончили запись...");
+                    moveTo.StopRecord(moveTo);
                     break;
                 case "go":
-                    character.SendMessage("[MoveTo] бежим вперед");
+                    character.SendMessage("[MoveTo] бежим вперед...");
+                    moveTo.ReadPath();
                     moveTo.GoToPath((Npc)character.CurrentTarget, true);
                     break;
+                case "run":
+                    character.SendMessage("[MoveTo] включили режим бега...");
+                    moveTo.runningMode = true;
+                    break;
+                //case "walk":
+                //    character.SendMessage("[MoveTo] выключили режим бега...");
+                //    moveTo.runningMode = false;
+                //    break;
                 case "back":
-                    character.SendMessage("[MoveTo] бежим назад");
+                    character.SendMessage("[MoveTo] бежим назад...");
+                    moveTo.ReadPath();
                     moveTo.GoToPath((Npc)character.CurrentTarget, false);
                     break;
                 case "stop":
-                    character.SendMessage("[MoveTo] стоим на месте");
-                    moveTo.Stop((Npc)character.CurrentTarget);
+                    character.SendMessage("[MoveTo] стоим на месте...");
+                    moveTo.StopMove((Npc)character.CurrentTarget);
                     break;
             }
         }

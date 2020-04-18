@@ -87,6 +87,7 @@ namespace AAEmu.Game
             MailManager.Instance.Load();
 
             DuelManager.Instance.Initialize();
+            AiManager.Instance.Initialize();
             
             ScriptCompiler.Compile();
 

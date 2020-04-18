@@ -14,6 +14,7 @@ using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Models.Game.Units.Route;
 using AAEmu.Game.Models.Tasks;
 using AAEmu.Game.Models.Tasks.Skills;
 
@@ -81,6 +82,8 @@ namespace AAEmu.Game.Models.Game.Units
         /// Indicates the route and speed of the Unit patrol, whether it is performing patrols, etc.
         /// </summary>
         public Patrol Patrol { get; set; }
+        public Simulation Simulation { get; set; }
+
         private readonly object _doDieLock = new object();
 
         public Unit()
