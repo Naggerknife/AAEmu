@@ -53,7 +53,18 @@ namespace AAEmu.Game.Models.Game.Units.Route
             // Change NPC coordinates
             moveType.X = npc.Position.X;
             moveType.Y = npc.Position.Y;
-            moveType.Z = AppConfiguration.Instance.HeightMapsEnable ? WorldManager.Instance.GetHeight(npc.Position.ZoneId, npc.Position.X, npc.Position.Y) : npc.Position.Z;
+            if (npc.TemplateId == 13677 || npc.TemplateId == 13676) // swimming
+            {
+                moveType.Z = 98.5993f;
+            }
+            else if (npc.TemplateId == 13680) // shark
+            {
+                moveType.Z = 95.5993f;
+            }
+            else // other
+            {
+                moveType.Z = AppConfiguration.Instance.HeightMapsEnable ? WorldManager.Instance.GetHeight(npc.Position.ZoneId, npc.Position.X, npc.Position.Y) : npc.Position.Z;
+            }
 
             var angle = MathUtil.CalculateAngleFrom(x, y, npc.Position.X, npc.Position.Y);
             var rotZ = MathUtil.ConvertDegreeToDirection(angle);
@@ -62,7 +73,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
             moveType.RotationZ = rotZ;
 
             moveType.Flags = 5; // 5-идти, 4-бежать (мобы прыжками), 3-стоять на месте
-            moveType.DeltaMovement = new sbyte[3];
+            moveType.DeltaMovement = new byte[3];
             moveType.DeltaMovement[0] = 0;
             moveType.DeltaMovement[1] = 127; // 88.. 118
             moveType.DeltaMovement[2] = 0;

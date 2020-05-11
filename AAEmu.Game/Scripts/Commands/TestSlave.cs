@@ -1,4 +1,4 @@
-using AAEmu.Game.Core.Managers;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game;
@@ -27,8 +27,8 @@ namespace AAEmu.Game.Scripts.Commands
         public void Execute(Character character, string[] args)
         {
             var slave = new Slave();
-            slave.TemplateId = 54;
-            slave.ModelId = 952;
+            slave.TemplateId = 46; //54;
+            slave.ModelId = 653; //952;
             slave.ObjId = ObjectIdManager.Instance.GetNextId();
             slave.TlId = (ushort)TlIdManager.Instance.GetNextId();
             slave.Faction = FactionManager.Instance.GetFaction(143);

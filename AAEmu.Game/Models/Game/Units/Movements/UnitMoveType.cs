@@ -1,11 +1,11 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
 
 namespace AAEmu.Game.Models.Game.Units.Movements
 {
     public class UnitMoveType : MoveType
     {
-        public sbyte[] DeltaMovement { get; set; }
+        public byte[] DeltaMovement { get; set; }
         public sbyte Stance { get; set; }
         public sbyte Alertness { get; set; }
         public byte GcFlags { get; set; }
@@ -30,10 +30,10 @@ namespace AAEmu.Game.Models.Game.Units.Movements
             RotationX = stream.ReadSByte();
             RotationY = stream.ReadSByte();
             RotationZ = stream.ReadSByte();
-            DeltaMovement = new sbyte[3];
-            DeltaMovement[0] = stream.ReadSByte();
-            DeltaMovement[1] = stream.ReadSByte();
-            DeltaMovement[2] = stream.ReadSByte();
+            DeltaMovement = new byte[3];
+            DeltaMovement[0] = stream.ReadByte();
+            DeltaMovement[1] = stream.ReadByte();
+            DeltaMovement[2] = stream.ReadByte();
             Stance = stream.ReadSByte();
             Alertness = stream.ReadSByte();
             Flags = stream.ReadByte();

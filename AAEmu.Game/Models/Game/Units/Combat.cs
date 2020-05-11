@@ -17,12 +17,9 @@ namespace AAEmu.Game.Models.Game.Units
 
             // If we are killed, the NPC goes to the place of spawn
             var trg = (Unit)npc.CurrentTarget;
-            //if (trg == null)
-            //    return;
-
-            if (trg?.Hp <= 0)
+            if (npc.CurrentTarget == null)
             {
-                npc.BroadcastPacket(new SCCombatClearedPacket(trg.ObjId), true);
+                //npc.BroadcastPacket(new SCCombatClearedPacket(trg.ObjId), true);
                 npc.BroadcastPacket(new SCCombatClearedPacket(npc.ObjId), true);
                 npc.BroadcastPacket(new SCTargetChangedPacket(npc.ObjId, 0), true);
                 npc.CurrentTarget = null;

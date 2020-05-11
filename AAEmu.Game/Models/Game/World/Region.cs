@@ -124,78 +124,152 @@ namespace AAEmu.Game.Models.Game.World
             {
                 return;
             }
-            // показать игроку все объекты в регионе
+            // show the player all the facilities in the region
             if (obj is Character character1)
             {
                 var units = GetList(new List<Unit>(), character1.ObjId);
                 foreach (var t in units)
                 {
+                    // turn on the motion of the visible NPC
                     if (t is Npc npc)
                     {
-                        // включаем движение видимых NPC
-                        //if (npc.TemplateId == 3492 || npc.TemplateId == 3475 || npc.TemplateId == 3464 ||
-                        //    npc.TemplateId == 916 || npc.TemplateId == 11951 || npc.TemplateId == 7674 ||
-                        //    npc.TemplateId == 7648 || npc.TemplateId == 7677 || npc.TemplateId == 7676 ||
-                        //    npc.TemplateId == 7673 || npc.TemplateId == 4499 || npc.TemplateId == 4498 ||
-                        //    npc.TemplateId == 4500 || npc.TemplateId == 3451 || npc.TemplateId == 3502 ||
-                        //    npc.TemplateId == 3494 || npc.TemplateId == 3480 || npc.TemplateId == 3460 ||
-                        //    npc.TemplateId == 3495)
-                        if (npc.Faction.GuardHelp == false)
+                        // exclude Training Scarecrow from move objects and others NPC
+                        if (npc.TemplateId == 7512 || npc.TemplateId == 7513 || npc.TemplateId == 7511 ||
+                            npc.TemplateId == 9129 || npc.TemplateId == 9449)
+                        {
+                            // do nothing for these NPCs.
+                        }
+                        // We're gonna get the NPC's favorites on the road.
+                        // Nui Forest keeper Arthur
+                        if (npc.TemplateId == 11999)
+                        {
+                            if (!npc.IsInPatrol)
+                            {
+                                npc.IsInPatrol = true; // so as not to run the route a second time
+                                var path = new Simulation(npc);
+                                path.MoveFileName = @"NuiForestkeeperArthur"; // path file name
+                                path.ReadPath();
+                                path.GoToPath(npc, true);
+                            }
+                        }
+                        else
+                        // Nui Woodcutter Solace
+                        if (npc.TemplateId == 12143)
+                        {
+                            if (!npc.IsInPatrol)
+                            {
+                                npc.IsInPatrol = true; // so as not to run the route a second time
+                                var path = new Simulation(npc);
+                                path.MoveFileName = @"NuiWoodcutterSolace"; // path file name
+                                path.ReadPath();
+                                path.GoToPath(npc, true);
+                            }
+                        }
+                        else
+                        //                    deer                         swimmers
+                        if (npc.TemplateId == 4200 || npc.TemplateId == 13677 || npc.TemplateId == 13676)
                         {
                             if (npc.Patrol == null)
                             {
                                 Patrol patrol = null;
-                                var rnd = Rand.Next(0, 600);
-                                if (rnd > 510)
+                                var rnd = Rand.Next(0, 400);
+                                if (rnd > 300)
                                 {
-                                    //NPC медленно шевелятся
-                                   var stirring = new Stirring() { Interrupt = true, Loop = true, Abandon = false };
-                                    stirring.Degree = (short)Rand.Next(180, 360);
-                                    patrol = stirring;
-                                }
-                                else if (rnd > 410)
-                                {
-                                    // NPC движутся по квадрату
-                                    var square = new Square() { Interrupt = true, Loop = true, Abandon = false };
+                                    // NPCs are moving squarely
+                                    var square = new Square { Interrupt = true, Loop = true, Abandon = false };
                                     square.Degree = (short)Rand.Next(180, 360);
                                     patrol = square;
                                 }
-                                else if (rnd > 310)
+                                else if (rnd > 200)
                                 {
-                                    // NPC движутся по кругу
-                                    patrol = new Circular() { Interrupt = true, Loop = true, Abandon = false };
+                                    // NPCs are moving around in a circle
+                                    patrol = new Circular { Interrupt = true, Loop = true, Abandon = false };
                                 }
-                                else if (rnd > 210)
+                                else if (rnd > 100)
                                 {
-                                    //NPC дерганно двигаются
-                                    var jerky = new Jerky { Interrupt = true, Loop = true, Abandon = false };
-                                    jerky.Degree = (short)Rand.Next(180, 360);
-                                    patrol = jerky;
-                                }
-                                else if (rnd > 110)
-                                {
-                                    //NPC движутся по ткацкому челноку по оси Y
+                                    // NPC move along the weaving shuttle in the Y-axis.
                                     var quill = new QuillY { Interrupt = true, Loop = true, Abandon = false };
                                     quill.Degree = (short)Rand.Next(180, 360);
                                     patrol = quill;
                                 }
-                                else if (rnd > 10)
+                                else if (rnd <= 100)
                                 {
-                                    //NPC движутся по ткацкому челноку по оси Y
+                                    // NPC move along the weaving shuttle in the X-axis.
                                     var quill = new QuillX { Interrupt = true, Loop = true, Abandon = false };
                                     quill.Degree = (short)Rand.Next(180, 360);
                                     patrol = quill;
-                                }
-                                else if (rnd <= 10)
-                                {
-                                    // NPC стоят на месте
-                                    npc.Patrol = null;
                                 }
                                 if (patrol != null)
                                 {
                                     patrol.Pause(npc);
                                     npc.Patrol = patrol;
                                     npc.Patrol.LastPatrol = null;
+                                    patrol.Recovery(npc);
+                                }
+                            }
+                        }
+                        else
+                        // here the NPCs you can hunt, check that they are not protected by Guards
+                        if (npc.Faction.GuardHelp == false)
+                        {
+                            if (npc.Patrol == null)
+                            {
+                                Patrol patrol = null;
+                                var rnd = Rand.Next(0, 800);
+                                if (rnd > 700)
+                                {
+                                    // NPC stand still
+                                    npc.Patrol = null;
+                                    // NPC is moving slowly
+                                    //var stirring = new Stirring() { Interrupt = true, Loop = true, Abandon = false };
+                                    //stirring.Degree = (short)Rand.Next(180, 360);
+                                    //patrol = stirring;
+                                }
+                                else if (rnd > 600)
+                                {
+                                    // NPCs are moving squarely
+                                    var square = new Square { Interrupt = true, Loop = true, Abandon = false };
+                                    square.Degree = (short)Rand.Next(180, 360);
+                                    patrol = square;
+                                }
+                                else if (rnd > 500)
+                                {
+                                    // NPCs are moving around in a circle
+                                    patrol = new Circular { Interrupt = true, Loop = true, Abandon = false };
+                                }
+                                else if (rnd > 400)
+                                {
+                                    // NPC stand still
+                                    npc.Patrol = null;
+                                    // NPCs are jerking around
+                                    //var jerky = new Jerky { Interrupt = true, Loop = true, Abandon = false };
+                                    //jerky.Degree = (short)Rand.Next(180, 360);
+                                    //patrol = jerky;
+                                }
+                                else if (rnd > 300)
+                                {
+                                    // NPC move along the weaving shuttle in the Y-axis.
+                                    var quill = new QuillY { Interrupt = true, Loop = true, Abandon = false };
+                                    quill.Degree = (short)Rand.Next(180, 360);
+                                    patrol = quill;
+                                }
+                                else if (rnd > 200)
+                                {
+                                    // NPC move along the weaving shuttle in the X-axis.
+                                    var quill = new QuillX { Interrupt = true, Loop = true, Abandon = false };
+                                    quill.Degree = (short)Rand.Next(180, 360);
+                                    patrol = quill;
+                                }
+                                else if (rnd <= 200) // the bulk of the NPC is in place to reduce server load
+                                {
+                                    // NPC stand still
+                                    npc.Patrol = null;
+                                }
+                                if (patrol != null)
+                                {
+                                    patrol.Pause(npc);
+                                    npc.Patrol = patrol;
+                                    npc.Patrol.LastPatrol = patrol;
                                     patrol.Recovery(npc);
                                 }
                             }
@@ -242,7 +316,14 @@ namespace AAEmu.Game.Models.Game.World
                 {
                     if (t is Npc npc)
                     {
-                        npc.Patrol = null;
+                        if (npc.TemplateId == 11999)
+                        {
+                            // оставляем идущего NPC по маршруту
+                        }
+                        else
+                        {
+                            npc.Patrol = null;
+                        }
                     }
                 }
 

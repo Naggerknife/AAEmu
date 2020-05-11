@@ -1,4 +1,5 @@
 ﻿using System;
+
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
@@ -28,12 +29,10 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         public uint ParentObjId { get; set; }
         public DoodadOwnerType OwnerType { get; set; }
         public byte AttachPoint { get; set; }
-        public uint DbId { get; set; }
+        public uint DbHouseId { get; set; }
         public int Data { get; set; }
-
         public DoodadSpawner Spawner { get; set; }
         public DoodadFuncTask FuncTask { get; set; }
-
         public uint TimeLeft => GrowthTime > DateTime.Now ? (uint)(GrowthTime - DateTime.Now).TotalMilliseconds : 0; // TODO formula time of phase
 
         public Doodad()
@@ -54,7 +53,9 @@ namespace AAEmu.Game.Models.Game.DoodadObj
             foreach (var funcGroup in Template.FuncGroups)
             {
                 if (funcGroup.GroupKindId == 1)
+                {
                     return funcGroup.Id;
+                }
             }
 
             return 0;
@@ -63,7 +64,9 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         public override void BroadcastPacket(GamePacket packet, bool self)
         {
             foreach (var character in WorldManager.Instance.GetAround<Character>(this))
+            {
                 character.SendPacket(packet);
+            }
         }
 
         public override void AddVisibleObject(Character character)
@@ -94,20 +97,20 @@ namespace AAEmu.Game.Models.Game.DoodadObj
             stream.Write(Helpers.ConvertRotation(Position.RotationY));
             stream.Write(Helpers.ConvertRotation(Position.RotationZ));
             stream.Write(Scale);
-            stream.Write(false); // hasLootItem
+            stream.Write(false);       // hasLootItem
             stream.Write(FuncGroupId); // doodad_func_groups Id
-            stream.Write(OwnerId); // characterId
-            stream.Write(ItemId); // type(id)
-            stream.Write(0u); // item Id
-            stream.Write(0u); // type(id)
-            stream.Write(TimeLeft); // growing
+            stream.Write(OwnerId);     // characterId
+            stream.Write(ItemId);      // type(id)
+            stream.Write(0u);          // item Id
+            stream.Write(0u);          // type(id)
+            stream.Write(TimeLeft);    // growing
             stream.Write(PlantTime);
-            stream.Write(10u); // type(id)?
-            stream.Write(0); // family
-            stream.Write(-1); // puzzleGroup
+            stream.Write(10u);         // type(id)?
+            stream.Write(0);           // family
+            stream.Write(-1);          // puzzleGroup
             stream.Write((byte)OwnerType); // ownerType
-            stream.Write(DbId); // dbHouseId
-            stream.Write(Data); // data
+            stream.Write(DbHouseId);   // dbHouseId
+            stream.Write(Data);        // data
             return stream;
         }
     }

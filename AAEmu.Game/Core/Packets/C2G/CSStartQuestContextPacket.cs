@@ -19,7 +19,10 @@ namespace AAEmu.Game.Core.Packets.C2G
             if (objId > 0 &&
                 Connection.ActiveChar.CurrentTarget != null &&
                 Connection.ActiveChar.CurrentTarget.ObjId != objId)
+            {
                 return;
+            }
+
             Connection.ActiveChar.Quests.Add(questId);
         }
     }

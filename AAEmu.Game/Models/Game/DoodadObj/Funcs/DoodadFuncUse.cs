@@ -1,6 +1,6 @@
 ﻿using System;
+
 using AAEmu.Game.Core.Managers.UnitManagers;
-using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
@@ -16,18 +16,14 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
             _log.Debug("DoodadFuncUse: skillId {0}, SkillId {1}", skillId, SkillId);
 
             var character = (Character)caster;
-            if (character == null) return;
-
-            character.LaborPowerModified = DateTime.Now;
-            character.ChangeLabor(-10, 0);
-
-            var func = DoodadManager.Instance.GetFunc(owner.FuncGroupId, skillId);
-
-            if (func.NextPhase <= 0)
+            if (character != null)
             {
-                return;
+                character.LaborPowerModified = DateTime.Now;
+                character.ChangeLabor(-10, 0);
             }
 
+            var func = DoodadManager.Instance.GetFunc(owner.FuncGroupId, skillId);
+            if (func.NextPhase <= 0) { return; }
             owner.FuncGroupId = (uint)func.NextPhase;
             var nextfunc = DoodadManager.Instance.GetFunc(owner.FuncGroupId, 0);
             nextfunc?.Use(caster, owner, skillId);

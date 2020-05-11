@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using AAEmu.Commons.Utils;
 using AAEmu.Editor.Core.Network.Connections;
 using AAEmu.Editor.Core.Packets.E2C;
-using AAEmu.Editor.Core.Packets.C2E;
-using AAEmu.Editor.Utils;
 using AAEmu.Editor.Core.Packets.L2C;
 using AAEmu.Editor.Core.Packets.L2G;
+using AAEmu.Editor.Utils;
 
 namespace AAEmu.Editor.Core.Controllers
 {
@@ -49,7 +49,8 @@ namespace AAEmu.Editor.Core.Controllers
                         connection.LastEditor = DateTime.Now;
                         connection.LastIp = connection.Ip;
 
-                        //connection.SendPacket(new ECEditorResponsePacket(0, "c:\\aa\\Archeage0.5\\bin32(test)\\dedicatedserver.exe"));
+                        //connection.SendPacket(new ECEditorResponsePacket(0, @"g:\Games\Archeage1.0\dedicated\bin32\dedicatedserver.exe"));
+                        connection.SendPacket(new ECEditorResponsePacket(0, @"g:\Games\Archeage1.0\game\db\compact.sqlite3 "));
                     }
                 }
             }
@@ -100,7 +101,9 @@ namespace AAEmu.Editor.Core.Controllers
         public void AddReconnectionToken(InternalConnection connection, byte gsId, uint accountId, uint token)
         {
             if (!_tokens.ContainsKey(gsId))
+            {
                 _tokens.Add(gsId, new Dictionary<uint, uint>());
+            }
 
             _tokens[gsId].Add(token, accountId);
             connection.SendPacket(new LGPlayerReconnectPacket(token));
@@ -112,7 +115,9 @@ namespace AAEmu.Editor.Core.Controllers
             {
                 var parentId = GameController.Instance.GetParentId(gsId);
                 if (parentId != null)
+                {
                     gsId = (byte)parentId;
+                }
                 else
                 {
                     // TODO ...

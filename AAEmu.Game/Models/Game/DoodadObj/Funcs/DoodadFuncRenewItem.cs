@@ -10,7 +10,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
         
         public override void Use(Unit caster, Doodad owner, uint skillId)
         {
-            _log.Debug("DoodadFuncRenewItem: SkillId {0}", SkillId);
+            _log.Debug("DoodadFuncRenewItem: skillId {0}, SkillId {1}", skillId, SkillId);
+
             var func = DoodadManager.Instance.GetFunc(owner.FuncGroupId, SkillId);
             func?.Use(caster, owner, SkillId);
         }

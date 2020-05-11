@@ -2,7 +2,6 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
-using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Units;
 
@@ -18,12 +17,12 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
             _log.Debug("DoodadFuncRatioChange : Ratio {0}, NextPhase {1}, SkillId {2}", Ratio, NextPhase, skillId);
 
             var character = (Character)caster;
-            if (character == null) return;
+            if (character == null) { return; }
 
             if (Ratio < 10000)
             {
                 var chance = Rand.Next(0, 10000);
-                if (chance < Ratio) return;
+                if (chance < Ratio) { return; }
             }
 
             //uint itemId;
@@ -32,8 +31,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
             if (itemTemplate == null)
             {
                 var itemId = GetItemIdFromSkill(skillId);
-                if (itemId == 0)
-                    return;
+                if (itemId == 0) { return; }
+
                 character.Inventory.AddNewItem(itemId, count, 0, ItemTaskType.Loot);
             }
             else

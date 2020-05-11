@@ -15,9 +15,12 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
             _log.Debug("QuestActSupplyCopper");
 
             character.Money += Amount;
-            character.SendPacket(
-                new SCItemTaskSuccessPacket(ItemTaskType.QuestComplete, new List<ItemTask> { new MoneyChange(Amount) }, new List<ulong>())
-            );
+            character.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.QuestComplete,
+                new List<ItemTask>
+                {
+                    new MoneyChange(Amount)
+                },
+                new List<ulong>()));
 
             return true;
         }

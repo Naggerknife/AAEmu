@@ -17,7 +17,9 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
         {
             _log.Debug("DoodadFuncGrowth : skillId {0}, Delay {1}, StartScale {2}, EndScale {3}, NextPhase {4}",
                 skillId, Delay, StartScale, EndScale, NextPhase);
-            
+
+            if (Delay <= 0) { return; }
+
             owner.GrowthTime = DateTime.Now.AddMilliseconds(Delay);
             owner.FuncTask = new DoodadFuncGrowthTask(caster, owner, skillId, NextPhase);
             TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(Delay));

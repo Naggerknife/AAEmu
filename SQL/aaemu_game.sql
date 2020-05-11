@@ -4,7 +4,7 @@ Navicat MySQL Data Transfer
 Source Server         : archeage
 Source Server Version : 80012
 Source Host           : localhost:3306
-Source Database       : aaemu_game12
+Source Database       : aaemu_game
 
 Target Server Type    : MYSQL
 Target Server Version : 80012

@@ -203,12 +203,7 @@ namespace AAEmu.Game.Models.Game.Char
         public bool IsQuestComplete(uint questId)
         {
             var completeId = (ushort)(questId / 64);
-            if (!CompletedQuests.ContainsKey(completeId))
-            {
-                return false;
-            }
-
-            return CompletedQuests[completeId].Body[(int)(questId - completeId * 64)];
+            return CompletedQuests.ContainsKey(completeId) && CompletedQuests[completeId].Body[(int)(questId - completeId * 64)];
         }
 
         public void Send()

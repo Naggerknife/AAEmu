@@ -1,10 +1,9 @@
-﻿using AAEmu.Commons.Utils;
-using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Models.Game.Char;
+﻿using System;
+
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
-using AAEmu.Game.Models.Game.Items;
-using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.World;
 
 namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
@@ -23,19 +22,19 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
             _log.Debug("DoodadFuncLootItem: skillId {0}, WorldInteractionId {1}, ItemId {2}, CountMin {3}, CountMax {4}, Percent {5}, RemainTime {6}, GroupId {7}",
                 skillId, WorldInteractionId, ItemId, CountMin, CountMax, Percent, RemainTime, GroupId);
 
-            var character = (Character)caster;
-            if (character == null) return;
+            _log.Debug("InteractionEffect, {0}", (WorldInteractionType)WorldInteractionId);
+            var classType = Type.GetType("AAEmu.Game.Models.Game.World.Interactions." + (WorldInteractionType)WorldInteractionId);
+            if (classType == null)
+            {
+                _log.Error("InteractionEffect, Unknown world interaction: {0}", (WorldInteractionType)WorldInteractionId);
+                return;
+            }
+            _log.Debug("InteractionEffect, Action: {0}", classType); // TODO help to debug...
 
-            var chance = Rand.Next(0, 10000);
-            if (chance > Percent) return;
-
-            var count = Rand.Next(CountMin, CountMax);
-
-            //TODO: Buffer
-            //var item = ItemManager.Instance.Create(ItemId, count, 0);
-            //character.Inventory.AddExistingItem(item, true, SlotType.Inventory, ItemTaskType.Loot);
-            //character.Inventory.AddExistingItem(item, ItemTaskType.Loot);
-            character.Inventory.AddNewItem(ItemId, count, 0, ItemTaskType.Loot);
+            var action = (IWorldInteraction)Activator.CreateInstance(classType);
+            var casterType = SkillCaster.GetByType((SkillCasterType)SkillCastTargetType.Unit);
+            var targetType = SkillCastTarget.GetByType((SkillCastTargetType)SkillCastTargetType.Item);
+            action.Execute(caster, casterType, owner, targetType, skillId, ItemId, this);
         }
     }
 }

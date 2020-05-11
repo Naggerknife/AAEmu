@@ -31,25 +31,24 @@ namespace AAEmu.Game.Models.Game.DoodadObj
 
             template.Use(caster, owner, skillId);
 
-            if (NextPhase > 0)
+            if (NextPhase <= 0) { return; }
+
+            if (owner.FuncTask != null)
             {
-                if (owner.FuncTask != null)
-                {
-                    await owner.FuncTask.Cancel();
-                    owner.FuncTask = null;
-                }
+                await owner.FuncTask.Cancel();
+                owner.FuncTask = null;
+            }
 
-                if (SoundId > 0)
-                {
-                    owner.BroadcastPacket(new SCDoodadSoundPacket(owner, SoundId), true); // TODO added since some doodad have sound
-                }
+            if (SoundId > 0)
+            {
+                owner.BroadcastPacket(new SCDoodadSoundPacket(owner, SoundId), true); // TODO added since some doodad have sound
+            }
 
-                owner.FuncGroupId = (uint)NextPhase;
-                var funcs = DoodadManager.Instance.GetPhaseFunc(owner.FuncGroupId);
-                foreach (var func in funcs)
-                {
-                    func?.Use(caster, owner, skillId);
-                }
+            owner.FuncGroupId = (uint)NextPhase;
+            var funcs = DoodadManager.Instance.GetPhaseFunc(owner.FuncGroupId);
+            foreach (var func in funcs)
+            {
+                func?.Use(caster, owner, skillId);
             }
         }
     }

@@ -113,7 +113,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
                 moveType.RotationZ = rotZ;
 
                 moveType.Flags = 4;     // 5-идти, 4-бежать
-                moveType.DeltaMovement = new sbyte[3];
+                moveType.DeltaMovement = new byte[3];
                 moveType.DeltaMovement[0] = 0;
                 moveType.DeltaMovement[1] = 127;
                 moveType.DeltaMovement[2] = 0;

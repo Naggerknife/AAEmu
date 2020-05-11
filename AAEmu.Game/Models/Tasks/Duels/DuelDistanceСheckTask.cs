@@ -1,4 +1,5 @@
-﻿using AAEmu.Game.Core.Managers;
+﻿using System;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Models.Game.Duels;
 
@@ -23,13 +24,20 @@ namespace AAEmu.Game.Models.Tasks.Duels
                 return;
 
             var res = DuelManager.Instance.DuelDistanceСheck(_challengerId);
-            if (res == DuelDistance.ChallengerFar)
+            switch (res)
             {
-                DuelManager.Instance.DuelStop(_challengedId, DuelDetType.Surrender, _challengerId);
-            }
-            else if (res == DuelDistance.ChallengedFar)
-            {
-                DuelManager.Instance.DuelStop(_challengerId, DuelDetType.Surrender, _challengedId);
+                case DuelDistance.ChallengerFar:
+                    DuelManager.Instance.DuelStop(_challengedId, DuelDetType.Surrender, _challengerId);
+                    break;
+                case DuelDistance.ChallengedFar:
+                    DuelManager.Instance.DuelStop(_challengerId, DuelDetType.Surrender, _challengedId);
+                    break;
+                case DuelDistance.Error:
+                    break;
+                case DuelDistance.Near:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }

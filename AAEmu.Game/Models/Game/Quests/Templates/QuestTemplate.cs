@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace AAEmu.Game.Models.Game.Quests.Templates
 {
@@ -30,23 +32,18 @@ namespace AAEmu.Game.Models.Game.Quests.Templates
             Components = new Dictionary<uint, QuestComponent>();
         }
 
-        public QuestComponent GetComponent(byte step)
+        public QuestComponent GetComponent(QuestComponentKind step)
         {
-            foreach (var component in Components.Values)
-                if (component.KindId == step)
-                    return component;
-            return null;
+            return Components.Values.FirstOrDefault(component => component.KindId == step);
         }
-        public QuestComponent[] GetComponents(byte step)
+        public QuestComponent[] GetComponents(QuestComponentKind step)
         {
-            QuestComponent[] qcl = new QuestComponent[0];
-            foreach (var component in Components.Values)
-                if (component.KindId == step)
-                {
-                    System.Array.Resize(ref qcl, qcl.Length + 1);
-                    qcl[qcl.Length - 1] = component;
-                    // return component;
-                }
+            QuestComponent[] qcl = Array.Empty<QuestComponent>();
+            foreach (var component in Components.Values.Where(component => component.KindId == step))
+            {
+                Array.Resize(ref qcl, qcl.Length + 1);
+                qcl[qcl.Length - 1] = component;
+            }
             return qcl;
         }
     }

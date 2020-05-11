@@ -18,7 +18,6 @@ namespace AAEmu.Game.Models.Game.NPChar
         private static Logger _log = LogManager.GetCurrentClassLogger();
         public uint TemplateId { get; set; }
         public NpcTemplate Template { get; set; }
-        //public Item[] Equip { get; set; }
         public NpcSpawner Spawner { get; set; }
         public override UnitCustomModelParams ModelParams => Template.ModelParams;
         public override float Scale => Template.Scale;

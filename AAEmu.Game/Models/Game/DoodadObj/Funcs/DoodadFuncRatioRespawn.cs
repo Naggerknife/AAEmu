@@ -37,12 +37,13 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                 var npcSpawner = new NpcSpawner
                 {
                     Id = 0,
-                    RespawnTime = 0,
-                    DespawnTime = 1,  // minutes
-                    UnitId = 7503,
+                    RespawnTime = 0,    // not appear after death
+                    //DespawnTime = 1, // minutes
+                    UnitId = 7503,    // Rat
                     Position = character.Position.Clone()
                 };
 
+                npcSpawner.Position.X = newX + Rand.Next(-2, 2);
                 npcSpawner.Position.Y = newY + Rand.Next(-2, 2);
                 npcSpawner.Position.Z = AppConfiguration.Instance.HeightMapsEnable
                     ? WorldManager.Instance.GetHeight(npcSpawner.Position.ZoneId, npcSpawner.Position.X, npcSpawner.Position.Y)
@@ -56,7 +57,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                 var npc = npcSpawner.Spawn(0);
 
                 npc.Respawn = DateTime.MinValue; // not appear after death
-                npc.Despawn = DateTime.Now.AddMinutes(1); // убираем через некоторое время
+                //npc.Despawn = DateTime.Now.AddMinutes(1); // убираем через некоторое время
 
                 npc.IsAutoAttack = true;
 

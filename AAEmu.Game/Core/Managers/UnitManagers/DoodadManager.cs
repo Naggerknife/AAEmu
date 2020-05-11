@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Models.Game.Char;
@@ -8,6 +9,7 @@ using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Utils.DB;
+
 using NLog;
 
 namespace AAEmu.Game.Core.Managers.UnitManagers
@@ -104,7 +106,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                 UseTargetHighlight = reader.GetBoolean("use_target_highlight", true),
                                 UseTargetSilhouette = reader.GetBoolean("use_target_silhouette", true),
                                 Name = LocalizationManager.Instance.GetEnglishLocalizedText("doodad_almighties", "name", reader.GetUInt32("id"))
-                        };
+                            };
                             _templates.Add(template.Id, template);
                         }
                     }
@@ -161,7 +163,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                             // TODO next_phase = 0?
                             List<DoodadFunc> list;
                             if (_funcs.ContainsKey(func.GroupId))
+                            {
                                 list = _funcs[func.GroupId];
+                            }
                             else
                             {
                                 list = new List<DoodadFunc>();
@@ -192,7 +196,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                             };
                             List<DoodadFunc> list;
                             if (_phaseFuncs.ContainsKey(func.GroupId))
+                            {
                                 list = _phaseFuncs[func.GroupId];
+                            }
                             else
                             {
                                 list = new List<DoodadFunc>();
@@ -2715,7 +2721,10 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         public Doodad Create(uint bcId, uint id, Unit unit = null)
         {
             if (!_templates.ContainsKey(id))
+            {
                 return null;
+            }
+
             var template = _templates[id];
             var doodad = new Doodad
             {
@@ -2738,7 +2747,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                 doodad.ParentObjId = house.ObjId;
                 doodad.OwnerId = house.OwnerId;
                 doodad.OwnerType = DoodadOwnerType.Housing;
-                doodad.DbId = house.Id;
+                doodad.DbHouseId = house.Id;
             }
 
             doodad.FuncGroupId = doodad.GetGroupId(); // TODO look, using doodadFuncId
@@ -2748,17 +2757,24 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         public DoodadFunc GetFunc(uint funcGroupId, uint skillId)
         {
             if (!_funcs.ContainsKey(funcGroupId))
+            {
                 return null;
+            }
+
             foreach (var func in _funcs[funcGroupId])
             {
                 if (func.SkillId == skillId)
+                {
                     return func;
+                }
             }
 
             foreach (var func in _funcs[funcGroupId])
             {
                 if (func.SkillId == 0)
+                {
                     return func;
+                }
             }
 
             return null;
@@ -2767,17 +2783,26 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         public DoodadFunc[] GetPhaseFunc(uint funcGroupId)
         {
             if (_phaseFuncs.ContainsKey(funcGroupId))
+            {
                 return _phaseFuncs[funcGroupId].ToArray();
+            }
+
             return new DoodadFunc[0];
         }
 
         public DoodadFuncTemplate GetFuncTemplate(uint funcId, string funcType)
         {
             if (!_funcTemplates.ContainsKey(funcType))
+            {
                 return null;
+            }
+
             var funcs = _funcTemplates[funcType];
             if (funcs.ContainsKey(funcId))
+            {
                 return funcs[funcId];
+            }
+
             return null;
         }
     }

@@ -71,7 +71,7 @@ namespace AAEmu.Game.Models.Game.Units.Route
 
             moveType.Flags = 5; // 5-идти, 4-бежать (мобы прыжками), 3-стоять на месте
             //moveType.VelZ = VelZ;
-            moveType.DeltaMovement = new sbyte[3];
+            moveType.DeltaMovement = new byte[3];
             moveType.DeltaMovement[0] = 0;
             moveType.DeltaMovement[1] = 127; // 88.. 118
             moveType.DeltaMovement[2] = 0;

@@ -27,7 +27,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             Log.Debug("InteractionEffect, Action: {0}", classType); // TODO help to debug...
 
             var action = (IWorldInteraction)Activator.CreateInstance(classType);
-            action.Execute(caster, casterObj, target, targetObj, skill.Template.Id);
+            action.Execute(caster, casterObj, target, targetObj, skill.Template.Id, DoodadId);
 
             if (caster is Character character)
             {

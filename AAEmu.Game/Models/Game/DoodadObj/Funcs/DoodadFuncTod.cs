@@ -13,11 +13,10 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
         {
             _log.Debug("DoodadFuncTod : skillId {0}, Tod {1}, NextPhase {2}", skillId, Tod, NextPhase);
 
-            if (owner.FuncTask == null)
-            {
-                // perform action
-                owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(owner), true);
-            }
+            if (owner.FuncTask != null) { return; }
+
+            // perform action
+            owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(owner), true);
         }
     }
 }

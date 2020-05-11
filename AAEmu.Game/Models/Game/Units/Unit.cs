@@ -63,6 +63,7 @@ namespace AAEmu.Game.Models.Game.Units
         public Dictionary<uint, List<Bonus>> Bonuses { get; set; }
         public Expedition Expedition { get; set; }
         public bool IsInBattle { get; set; }
+        public bool IsInPatrol { get; set; }
         public List<int> SummarizeDamage { get; set; }
         public bool IsAutoAttack { get; set; }
         public uint SkillId { get; set; }
@@ -179,6 +180,7 @@ namespace AAEmu.Game.Models.Game.Units
                             character.BroadcastPacket(new SCAiAggroPacket(currentTarget.ObjId, 0), true);
                             character.BroadcastPacket(new SCCombatClearedPacket(currentTarget.ObjId), true);
                             character.BroadcastPacket(new SCCombatClearedPacket(character.ObjId), true);
+                            character.BroadcastPacket(new SCTargetChangedPacket(character.ObjId, 0), true);
                             character.BroadcastPacket(new SCTargetChangedPacket(currentTarget.ObjId, 0), true);
                             character.IsInBattle = false; // we need the character to be "not in battle"
                             character.CurrentTarget = null;

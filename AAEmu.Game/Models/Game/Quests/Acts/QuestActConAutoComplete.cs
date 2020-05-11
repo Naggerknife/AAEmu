@@ -1,5 +1,5 @@
-﻿using AAEmu.Game.Models.Game.Quests.Templates;
-using AAEmu.Game.Models.Game.Char;
+﻿using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Quests.Templates;
 
 namespace AAEmu.Game.Models.Game.Quests.Acts
 {
@@ -8,10 +8,8 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
         public override bool Use(Character character, Quest quest, int objective)
         {
             _log.Warn("QuestActConAutoComplete");
-            if (character.Quests.IsQuestComplete((uint)quest.TemplateId))
-                return true;
-            else
-                return false;
+
+            return character.Quests.IsQuestComplete(quest.TemplateId);
         }
     }
 }
