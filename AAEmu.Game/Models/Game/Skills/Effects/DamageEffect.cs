@@ -66,12 +66,33 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
         public override void Apply(Unit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
             CastAction castObj, Skill skill, SkillObject skillObject, DateTime time)
         {
-            Log.Debug("DamageEffect");
+            Log.Debug("DamageEffect" +
+                      "DamageType {0}, FixedMin {1}, FixedMax {2}, Multiplier {3}, " +
+                      "UseMainhandWeapon {4}, UseOffhandWeapon {5}, UseRangedWeapon {6}, " +
+                      "CriticalBonus {7}, TargetBuffTagId {8}, TargetBuffBonus {9}, " +
+                      "UseFixedDamage {10}, UseLevelDamage {11}, LevelMd {12}, " +
+                      "LevelVaStart {13}, LevelVaEnd {14}, TargetBuffBonusMul {15}, " +
+                      "UseChargedBuff {16}, ChargedBuffId {17}, ChargedMul {18}, " +
+                      "AggroMultiplier {19}, HealthStealRatio {20}, ManaStealRatio {21}, " +
+                      "DpsMultiplier {22}, WeaponSlotId {23}, CheckCrime {24}, " +
+                      "HitAnimTimingId {25}, UseTargetChargedBuff {26}, TargetChargedBuffId {27}, " +
+                      "TargetChargedMul {28}, DpsIncMultiplier {29}, EngageCombat {30}, " +
+                      "Synergy {31}, ActabilityGroupId {32}, ActabilityStep {33}, " +
+                      "ActabilityMul {34}, ActabilityAdd {35}, ChargedLevelMul {36}, " +
+                      "AdjustDamageByHeight {37}, UsePercentDamage {38}, PercentMin {39}, " +
+                      "PercentMax {40}, UseCurrentHealth {41}, TargetHealthMin {42}, " +
+                      "TargetHealthMax {43}, TargetHealthMul {44}, TargetHealthAdd {45}, FireProc {46}",
+                       DamageType, FixedMin, FixedMax, Multiplier, UseMainhandWeapon, UseOffhandWeapon,
+                       UseRangedWeapon, CriticalBonus, TargetBuffTagId, TargetBuffBonus, UseFixedDamage,
+                       UseLevelDamage, LevelMd, LevelVaStart, LevelVaEnd, TargetBuffBonusMul, UseChargedBuff,
+                       ChargedBuffId, ChargedMul, AggroMultiplier, HealthStealRatio, ManaStealRatio,
+                       DpsMultiplier, WeaponSlotId, CheckCrime, HitAnimTimingId, UseTargetChargedBuff,
+                       TargetChargedBuffId, TargetChargedMul, DpsIncMultiplier, EngageCombat, Synergy,
+                       ActabilityGroupId, ActabilityStep, ActabilityMul, ActabilityAdd, ChargedLevelMul,
+                       AdjustDamageByHeight, UsePercentDamage, PercentMin, PercentMax, UseCurrentHealth,
+                       TargetHealthMin, TargetHealthMax, TargetHealthMul, TargetHealthAdd, FireProc);
 
-            if (!(target is Unit))
-            {
-                return;
-            }
+            if (!(target is Unit)) { return; }
 
             var trg = (Unit)target;
             var min = 0;
@@ -104,48 +125,61 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             }
 
             var dpsInc = 0f;
-            if (DamageType == DamageType.Melee)
+
+            switch (DamageType)
             {
-                dpsInc = caster.DpsInc;
-            }
-            else if (DamageType == DamageType.Magic)
-            {
-                dpsInc = caster.MDps + caster.MDpsInc;
-            }
-            else if (DamageType == DamageType.Ranged)
-            {
-                dpsInc = caster.RangedDpsInc;
+                case DamageType.Melee:
+                    Log.Debug("DamageEffect caster.DpsInc {0}", caster.DpsInc);
+                    dpsInc = caster.DpsInc;
+                    break;
+                case DamageType.Magic:
+                    Log.Debug("DamageEffect caster.MDps {0}, caster.MDpsInc {1}", caster.MDps, caster.MDpsInc);
+                    dpsInc = caster.MDps + caster.MDpsInc;
+                    break;
+                case DamageType.Ranged:
+                    Log.Debug("DamageEffect caster.RangedDpsInc {0}", caster.RangedDpsInc);
+                    dpsInc = caster.RangedDpsInc;
+                    break;
+                    //case DamageType.Siege:
+                    //    break;
+                    //default:
+                    //    throw new ArgumentOutOfRangeException();
             }
 
             var dps = 0f;
             if (UseMainhandWeapon)
             {
+                Log.Debug("DamageEffect caster.Dps {0}", caster.Dps);
                 dps += caster.Dps;
             }
             else if (UseOffhandWeapon)
             {
+                Log.Debug("DamageEffect caster.OffhandDps {0}", caster.OffhandDps);
                 dps += caster.OffhandDps;
             }
             else if (UseRangedWeapon)
             {
+                Log.Debug("DamageEffect caster.RangedDps {0}", caster.RangedDps);
                 dps += caster.RangedDps;
             }
 
-            if (dps <= 0) // TODO убрать этот костыль
-            {
-                dps = 15000f * caster.Level;
-            }
-            if (dpsInc <= 0)
-            {
-                dpsInc = 2000f * caster.Level;
-            }
+            //// TODO vv--убрать этот костыль--vv
+            //if (dps <= 0)
+            //{
+            //    dps = 15000f * caster.Level;
+            //}
+            //if (dpsInc <= 0)
+            //{
+            //    dpsInc = 2000f * caster.Level;
+            //}
+            //// TODO ^^--убрать этот костыль--^^
 
             min += (int)((DpsMultiplier * dps * 0.001f + DpsIncMultiplier * dpsInc * 0.001f) * unk2 + 0.5f);
             max += (int)((DpsMultiplier * dps * 0.001f + DpsIncMultiplier * dpsInc * 0.001f) * unk2 + 0.5f);
             min = (int)(min * Multiplier);
             max = (int)(max * Multiplier);
             var value = Rand.Next(min, max);
-            
+
             caster.SummarizeDamage[0] += value;
 
             if (caster is Character chr1) // Character is in battle

@@ -83,11 +83,11 @@ namespace AAEmu.Game.Models.Game.Skills
         }
     }
 
-    public class CastUnk2 : CastAction
+    public class CastBuffTarget : CastAction
     {
-        public CastUnk2()
+        public CastBuffTarget()
         {
-            Type = CastActionType.Unk2;
+            Type = CastActionType.BuffTarget;
         }
 
         public override PacketStream Write(PacketStream stream)
@@ -100,11 +100,11 @@ namespace AAEmu.Game.Models.Game.Skills
         }
     }
 
-    public class CastUnk3 : CastAction
+    public class CastDestroyTarget : CastAction
     {
-        public CastUnk3()
+        public CastDestroyTarget()
         {
-            Type = CastActionType.Unk3;
+            Type = CastActionType.DestroyTarget;
         }
 
         public override PacketStream Write(PacketStream stream)

@@ -28,14 +28,14 @@ namespace AAEmu.Game.Models.Game.Skills
                 case SkillCasterType.Unit:
                     obj = new SkillCasterUnit();
                     break;
-                case SkillCasterType.Unk1:
-                    obj = new SkillCasterUnk1();
+                case SkillCasterType.Action:
+                    obj = new SkillCasterAction();
                     break;
                 case SkillCasterType.Item:
                     obj = new SkillItem();
                     break;
-                case SkillCasterType.Unk3:
-                    obj = new SkillCasterUnk3();
+                case SkillCasterType.Mount:
+                    obj = new SkillCasterMount();
                     break;
                 case SkillCasterType.Doodad:
                     obj = new SkillDoodad();
@@ -62,15 +62,15 @@ namespace AAEmu.Game.Models.Game.Skills
         }
     }
 
-    public class SkillCasterUnk1 : SkillCaster
+    public class SkillCasterAction : SkillCaster
     {
-        public SkillCasterUnk1()
+        public SkillCasterAction()
         {
         }
 
-        public SkillCasterUnk1(uint objId)
+        public SkillCasterAction(uint objId)
         {
-            Type = SkillCasterType.Unk1;
+            Type = SkillCasterType.Action;
             ObjId = objId;
         }
     }
@@ -114,17 +114,17 @@ namespace AAEmu.Game.Models.Game.Skills
         }
     }
 
-    public class SkillCasterUnk3 : SkillCaster
+    public class SkillCasterMount : SkillCaster
     {
         public uint MountSkillTemplateId { get; set; }
 
-        public SkillCasterUnk3()
+        public SkillCasterMount()
         {
         }
 
-        public SkillCasterUnk3(uint objId)
+        public SkillCasterMount(uint objId)
         {
-            Type = SkillCasterType.Unk3;
+            Type = SkillCasterType.Mount;
             ObjId = objId;
         }
 

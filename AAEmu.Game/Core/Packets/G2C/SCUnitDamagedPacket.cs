@@ -31,7 +31,7 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write((byte)1); // crimeState [ 3.5 = 1 ]
             stream.WritePisc(_damage, 0, 0);
             stream.WritePisc(0, 0, 0);
-            stream.Write((byte)0); // hol        [ 3.5 = 19, 0 ]
+            stream.Write((byte)19); // hol        [ 3.5 = 19, 0 ]
             stream.Write((ushort)289); // de     [ damage effect? 3.5 = 5161, 289, 293 ]
             stream.Write((byte)1); // flag       [ 3.5 = 9, 13 ]
             stream.Write((byte)1); // result -> to debug info [ 3.5 = 1, 4 ]

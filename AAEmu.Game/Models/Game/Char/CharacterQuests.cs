@@ -120,7 +120,7 @@ namespace AAEmu.Game.Models.Game.Char
                 complete.Body.CopyTo(body, 0);
                 Owner.SendPacket(new SCQuestContextCompletedPacket(quest.TemplateId, body, res));
                 quest.RemoveQuestItems();
-                Quests.Remove(questId);
+                //Quests.Remove(questId); // TODO убрал из-за возникновения ошибки "изменение коллекции"
                 _removed.Add(questId);
                 OnQuestComplete(questId);
             }

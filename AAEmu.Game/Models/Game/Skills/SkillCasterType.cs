@@ -3,9 +3,9 @@
     public enum SkillCasterType : byte
     {
         Unit = 0,
-        Unk1 = 1,
+        Action = 1,
         Item = 2,
-        Unk3 = 3, // TODO mountSkillType
+        Mount = 3, // TODO mountSkillType
         Doodad = 4
     }
 }

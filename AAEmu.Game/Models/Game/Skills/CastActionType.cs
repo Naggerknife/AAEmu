@@ -5,7 +5,7 @@
         Skill = 0,
         Plot = 1,
         Buff = 2,
-        Unk2 = 3,
-        Unk3 = 4
+        BuffTarget = 3,
+        DestroyTarget = 4
     }
 }

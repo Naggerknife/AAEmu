@@ -25,6 +25,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 return; // TODO send error of immune?
 
             target.Effects.AddEffect(new Effect(target, caster, casterObj, this, skill, time));
+            
         }
 
         public override void Start(Unit caster, BaseUnit owner, Effect effect)
@@ -40,6 +41,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 // TODO using LinearLevelBonus
                 owner.AddBonus(effect.Index, bonus);
             }
+            Log.Debug("SCBuffCreatedPacket : BuffId {0}, SkillId {1}, State {2}, Duration {3}", effect.Template.BuffId, effect.Skill.TemplateId, effect.State, effect.Duration);
 
             owner.BroadcastPacket(new SCBuffCreatedPacket(effect), true);
         }
