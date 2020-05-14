@@ -7,7 +7,7 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
     {
         public override bool Use(Character character, Quest quest, int objective)
         {
-            _log.Debug("QuestActConAutoComplete QuestId {0}, objective {1}", quest.TemplateId, objective);
+            _log.Warn("QuestActConAutoComplete");
 
             return character.Quests.IsQuestComplete(quest.TemplateId);
         }

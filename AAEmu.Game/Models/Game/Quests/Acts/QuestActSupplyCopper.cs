@@ -12,17 +12,15 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
 
         public override bool Use(Character character, Quest quest, int objective)
         {
-            _log.Warn("QuestActSupplyCopper QuestId {0}, Amount {1}, objective {2}",
-                quest.TemplateId, Amount, objective);
+            _log.Debug("QuestActSupplyCopper");
 
             character.Money += Amount;
-            character.SendPacket(
-                new SCItemTaskSuccessPacket(ItemTaskType.QuestComplete,
-                    new List<ItemTask>
-                    {
-                        new MoneyChange(Amount)
-                    },
-                    new List<ulong>()));
+            character.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.QuestComplete,
+                new List<ItemTask>
+                {
+                    new MoneyChange(Amount)
+                },
+                new List<ulong>()));
 
             return true;
         }

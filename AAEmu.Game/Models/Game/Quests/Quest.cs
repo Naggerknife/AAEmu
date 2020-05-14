@@ -271,7 +271,10 @@ namespace AAEmu.Game.Models.Game.Quests
             for (var step = QuestComponentKind.None; step <= QuestComponentKind.Reward; step++)
             {
                 var component = Template.GetComponent(step);
-                if (component == null) { continue; }
+                if (component == null)
+                {
+                    continue;
+                }
 
                 var acts = QuestManager.Instance.GetActs(component.Id);
                 foreach (var act in acts)
