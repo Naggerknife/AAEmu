@@ -29,6 +29,7 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<uint, List<SkillModifier>> _skillModifiers;
         private Dictionary<uint, SkillReagent> _skillReagents;
         private Dictionary<uint, SkillProduct> _skillProducts;
+        
         /**
          * Events
          */
@@ -1403,6 +1404,7 @@ namespace AAEmu.Game.Core.Managers
                     }
                 }
 
+                
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = "SELECT * FROM tagged_skills";
