@@ -109,7 +109,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                     }
                 }
 
-                RemoveItem(caster, casterObj, 1);
+                RemoveItem(caster, casterObj, skill);
             }
             else
             {
@@ -159,7 +159,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                         }
                     }
 
-                    RemoveItem(caster, casterObj, 1);
+                    RemoveItem(caster, casterObj, skill);
                 }
             }
 
@@ -231,14 +231,29 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             return gradeId;
         }
 
-        private void RemoveItem(Unit caster, SkillCaster casterObj, int consumeCount)
+        private void RemoveItem(Unit caster, SkillCaster casterObj, Skill skill)
         {
             var character = (Character)caster;
             if (character == null) return;
             var lootPack = (SkillItem)casterObj;
             if (lootPack == null) return;
-            var lootPackItem = character.Inventory.GetItemById(lootPack.ItemId);
-            character?.Inventory.ConsumeItem(null,ItemTaskType.SkillReagents, lootPackItem.TemplateId, consumeCount,null);
+
+            var reagents = SkillManager.Instance.GetSkillReagentsBySkillId(skill.Id);
+
+            if(reagents.Count > 0)
+            {
+                foreach (var reagent in reagents)
+                {
+                    character?.Inventory.ConsumeItem(null, ItemTaskType.SkillReagents, reagent.ItemId, reagent.Amount, null);
+                }
+            }
+
+            else
+            {
+                var lootPackItem = character.Inventory.GetItemById(lootPack.ItemId);
+                character?.Inventory.ConsumeItem(null, ItemTaskType.SkillReagents, lootPackItem.TemplateId, 1, null);
+            }
+
             /*
             if (lootPackItem.Count > 1)
             {

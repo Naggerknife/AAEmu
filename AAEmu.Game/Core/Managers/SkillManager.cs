@@ -27,7 +27,8 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<uint, List<uint>> _taggedBuffs;
         private Dictionary<uint, List<uint>> _skillTags;
         private Dictionary<uint, List<SkillModifier>> _skillModifiers;
-        
+        private Dictionary<uint, SkillReagent> _skillReagents;
+        private Dictionary<uint, SkillProduct> _skillProducts;
         /**
          * Events
          */
@@ -116,6 +117,32 @@ namespace AAEmu.Game.Core.Managers
             return new List<SkillModifier>();
         }
 
+        public List<SkillReagent> GetSkillReagentsBySkillId(uint id)
+        {
+            List<SkillReagent> reagents = new List<SkillReagent>();
+
+            foreach (var reagent in _skillReagents)
+            {
+                if (reagent.Value.SkillId == id)
+                    reagents.Add(reagent.Value);
+            }
+
+            return reagents;
+        }
+
+        public List<SkillProduct> GetSkillProductsBySkillId(uint id)
+        {
+            List<SkillProduct> products = new List<SkillProduct>();
+
+            foreach (var product in _skillProducts)
+            {
+                if (product.Value.SkillId == id)
+                    products.Add(product.Value);
+            }
+
+            return products;
+        }
+
         public void Load()
         {
             _skills = new Dictionary<uint, SkillTemplate>();
@@ -171,6 +198,8 @@ namespace AAEmu.Game.Core.Managers
             _taggedBuffs = new Dictionary<uint, List<uint>>();
             _skillModifiers = new Dictionary<uint, List<SkillModifier>>();
             _skillTags = new Dictionary<uint, List<uint>>();
+            _skillReagents = new Dictionary<uint, SkillReagent>();
+            _skillProducts = new Dictionary<uint, SkillProduct>();
 
             using (var connection = SQLite.CreateConnection())
             {
@@ -1331,7 +1360,49 @@ namespace AAEmu.Game.Core.Managers
                         }
                     }
                 }
-                
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * from skill_reagents";
+                    command.Prepare();
+                    using (var sqliteReader = command.ExecuteReader())
+                    using (var reader = new SQLiteWrapperReader(sqliteReader))
+                    {
+                        while(reader.Read())
+                        {
+                            var template = new SkillReagent
+                            {
+                                Id = reader.GetUInt32("id"),
+                                SkillId = reader.GetUInt32("skill_id"),
+                                ItemId = reader.GetUInt32("item_id"),
+                                Amount = reader.GetInt16("amount")
+                            };
+                            _skillReagents.Add(template.Id, template);
+                        }
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * from skill_products";
+                    command.Prepare();
+                    using (var sqliteReader = command.ExecuteReader())
+                    using (var reader = new SQLiteWrapperReader(sqliteReader))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new SkillProduct
+                            {
+                                Id = reader.GetUInt32("id"),
+                                SkillId = reader.GetUInt32("skill_id"),
+                                ItemId = reader.GetUInt32("item_id"),
+                                Amount = reader.GetInt16("amount")
+                            };
+                            _skillProducts.Add(template.Id, template);
+                        }
+                    }
+                }
+
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = "SELECT * FROM tagged_skills";
