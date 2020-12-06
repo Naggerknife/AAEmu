@@ -48,9 +48,9 @@ namespace AAEmu.Game.Core.Packets.C2G
                 ),
                 true
             );
+            Connection.ActiveChar.IsUnderWater = false;
             Connection.ActiveChar.StartRegen();
-            Connection.ActiveChar.IsDrowing = false;
-            Connection.ActiveChar.Breath = 60000;
+            Connection.ActiveChar.Breath = Connection.ActiveChar.MaxBreath;
         }
     }
 }

@@ -103,7 +103,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         {
             foreach (var character in WorldManager.Instance.GetAllCharacters())
             {
-                if (character.IsDead || !character.NeedsRegen || character.IsDrowing)
+                if (character.IsDead || !character.NeedsRegen || character.IsDrowning)
                     continue;
 
                 if (character.IsInCombat)

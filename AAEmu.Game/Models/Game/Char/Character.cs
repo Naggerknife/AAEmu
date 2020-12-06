@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
@@ -136,12 +137,22 @@ namespace AAEmu.Game.Models.Game.Char
         public int AccessLevel { get; set; }
         public Point LocalPingPosition { get; set; } // added as a GM command helper
         private ConcurrentDictionary<uint, DateTime> _hostilePlayers { get; set; }
-        public bool IsUnderWater = false;
-        public bool IsDrowing = false;
-        public uint Breath = 60000; // Time in milleseconds
 
         private bool _inParty;
         private bool _isOnline;
+
+        private bool _isUnderWater;
+        public bool IsUnderWater
+        {
+            get { return _isUnderWater; }
+            set
+            {
+                _isUnderWater = value;
+                if (!_isUnderWater)
+                    Breath = MaxBreath;
+                SendPacket(new SCUnderWaterPacket(_isUnderWater));
+            }
+        }
 
         public bool InParty
         {
@@ -1367,25 +1378,15 @@ namespace AAEmu.Game.Models.Game.Char
             var moved = !Position.X.Equals(x) || !Position.Y.Equals(y) || !Position.Z.Equals(z);
             var lastZoneKey = Position.ZoneId;
             base.SetPosition(x, y, z, rotationX, rotationY, rotationZ);
+            
+            if (Position.Z < 98 && !IsUnderWater) //TODO: Need way to determine when player is under any body of water. 
+                IsUnderWater = true;
+            else if (Position.Z > 98 && IsUnderWater)
+                IsUnderWater = false;
 
             if (!moved)
                 return;
-            
-            if (Position.Z < 98 && !IsUnderWater) //TODO: Need way to determine when player is under any body of water. 
-            {
-                IsUnderWater = true;
-                this.SendPacket(new SCUnderWaterPacket(IsUnderWater));
-            }
-            else if (Position.Z > 98 && IsUnderWater)
-            {
-                if (IsDrowing)
-                    IsDrowing = false;
-                
-                IsUnderWater = false;
-                Breath = 60000;
-                this.SendPacket(new SCUnderWaterPacket(IsUnderWater));
-            }
-            
+
             Buffs.TriggerRemoveOn(BuffRemoveOn.Move);
 
             if (Position.ZoneId == lastZoneKey)
@@ -1503,13 +1504,28 @@ namespace AAEmu.Game.Models.Game.Char
                 return Load(connection, characterId);
         }
 
+        public uint MaxBreath
+        {
+            get
+            {
+                if (Race == Race.Elf)
+                    return 80000;
+                else
+                    return 60000;
+            }
+        }
+
+        public uint Breath { get; set; }
+        
+        public bool IsDrowning
+        {
+            get { return (Breath <= 0); }
+        }
+
         public void DoChangeBreath()
         {
-            if (Breath <= 0)
+            if (IsDrowning)
             {
-                if (IsDrowing)
-                    IsDrowing = true;
-                
                 var damageAmount = MaxHp * .1;
                 ReduceCurrentHp(this, (int)damageAmount);
                 SendPacket(new SCEnvDamagePacket(EnvSource.Drowning, ObjId, (uint)damageAmount));
@@ -1602,6 +1618,8 @@ namespace AAEmu.Game.Models.Game.Char
                             character.Hp = character.MaxHp;
                         if (character.Mp > character.MaxMp)
                             character.Mp = character.MaxMp;
+                        if (character.Breath < character.MaxBreath)
+                            character.Breath = character.MaxBreath;
                         character.CheckExp();
                     }
                 }
@@ -1707,6 +1725,8 @@ namespace AAEmu.Game.Models.Game.Char
                             character.Hp = character.MaxHp;
                         if (character.Mp > character.MaxMp)
                             character.Mp = character.MaxMp;
+                        if (character.Breath < character.MaxBreath)
+                            character.Breath = character.MaxBreath;
                         character.CheckExp();
                     }
                 }
