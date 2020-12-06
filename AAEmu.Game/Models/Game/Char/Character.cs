@@ -136,6 +136,9 @@ namespace AAEmu.Game.Models.Game.Char
         public int AccessLevel { get; set; }
         public Point LocalPingPosition { get; set; } // added as a GM command helper
         private ConcurrentDictionary<uint, DateTime> _hostilePlayers { get; set; }
+        public bool IsUnderWater = false;
+        public bool IsDrowing = false;
+        public uint Breath = 60000; // Time in milleseconds
 
         private bool _inParty;
         private bool _isOnline;
@@ -1367,6 +1370,22 @@ namespace AAEmu.Game.Models.Game.Char
 
             if (!moved)
                 return;
+            
+            if (Position.Z < 98 && !IsUnderWater) //TODO: Need way to determine when player is under any body of water. 
+            {
+                IsUnderWater = true;
+                this.SendPacket(new SCUnderWaterPacket(IsUnderWater));
+            }
+            else if (Position.Z > 98 && IsUnderWater)
+            {
+                if (IsDrowing)
+                    IsDrowing = false;
+                
+                IsUnderWater = false;
+                Breath = 60000;
+                this.SendPacket(new SCUnderWaterPacket(IsUnderWater));
+            }
+            
             Buffs.TriggerRemoveOn(BuffRemoveOn.Move);
 
             if (Position.ZoneId == lastZoneKey)
@@ -1482,6 +1501,24 @@ namespace AAEmu.Game.Models.Game.Char
         {
             using (var connection = MySQL.CreateConnection())
                 return Load(connection, characterId);
+        }
+
+        public void DoChangeBreath()
+        {
+            if (Breath <= 0)
+            {
+                if (IsDrowing)
+                    IsDrowing = true;
+                
+                var damageAmount = MaxHp * .1;
+                ReduceCurrentHp(this, (int)damageAmount);
+                SendPacket(new SCEnvDamagePacket(EnvSource.Drowning, ObjId, (uint)damageAmount));
+            }
+            else
+            {
+                Breath -= 1000; //1 second
+                SendPacket(new SCSetBreathPacket(Breath));   
+            }
         }
 
         #region Database
