@@ -138,12 +138,6 @@ namespace AAEmu.Game.Models.Game.Char
         public Point LocalPingPosition { get; set; } // added as a GM command helper
         private ConcurrentDictionary<uint, DateTime> _hostilePlayers { get; set; }
 
-        [UnitAttribute(UnitAttribute.LungCapacity)]
-        public uint LungCapacity
-        {
-            get => (uint)CalculateWithBonuses(60000, UnitAttribute.LungCapacity);
-        }
-
         private bool _inParty;
         private bool _isOnline;
 
@@ -1157,6 +1151,12 @@ namespace AAEmu.Game.Models.Game.Char
                 res += CalculateWithBonuses(0f, UnitAttribute.BlockMul) / 10f;
                 return (float)res;
             }
+        }
+        
+        [UnitAttribute(UnitAttribute.LungCapacity)]
+        public uint LungCapacity
+        {
+            get => (uint)CalculateWithBonuses(60000, UnitAttribute.LungCapacity);
         }
 
         #endregion
