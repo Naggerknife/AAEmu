@@ -50,7 +50,7 @@ namespace AAEmu.Game.Core.Packets.C2G
             );
             Connection.ActiveChar.IsUnderWater = false;
             Connection.ActiveChar.StartRegen();
-            Connection.ActiveChar.Breath = Connection.ActiveChar.MaxBreath;
+            Connection.ActiveChar.Breath = Connection.ActiveChar.LungCapacity;
         }
     }
 }

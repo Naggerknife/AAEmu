@@ -27,7 +27,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             int value4)
         {
             if (caster is Character character && character.IsUnderWater)
-                character.Breath = character.MaxBreath;
+                character.Breath = (uint)Math.Min(character.LungCapacity, character.Breath + value1);
         }
     }
 }

@@ -138,6 +138,12 @@ namespace AAEmu.Game.Models.Game.Char
         public Point LocalPingPosition { get; set; } // added as a GM command helper
         private ConcurrentDictionary<uint, DateTime> _hostilePlayers { get; set; }
 
+        [UnitAttribute(UnitAttribute.LungCapacity)]
+        public uint LungCapacity
+        {
+            get => (uint)CalculateWithBonuses(60000, UnitAttribute.LungCapacity);
+        }
+
         private bool _inParty;
         private bool _isOnline;
 
@@ -149,7 +155,7 @@ namespace AAEmu.Game.Models.Game.Char
             {
                 _isUnderWater = value;
                 if (!_isUnderWater)
-                    Breath = MaxBreath;
+                    Breath = LungCapacity;
                 SendPacket(new SCUnderWaterPacket(_isUnderWater));
             }
         }
@@ -1160,6 +1166,8 @@ namespace AAEmu.Game.Models.Game.Char
             _options = new Dictionary<ushort, string>();
             _hostilePlayers = new ConcurrentDictionary<uint, DateTime>();
 
+            Breath = LungCapacity;
+
             ModelParams = modelParams;
             Subscribers = new List<IDisposable>();
             
@@ -1378,12 +1386,12 @@ namespace AAEmu.Game.Models.Game.Char
             var moved = !Position.X.Equals(x) || !Position.Y.Equals(y) || !Position.Z.Equals(z);
             var lastZoneKey = Position.ZoneId;
             base.SetPosition(x, y, z, rotationX, rotationY, rotationZ);
-            
-            if (Position.Z < 98 && !IsUnderWater) //TODO: Need way to determine when player is under any body of water. 
-                IsUnderWater = true;
-            else if (Position.Z > 98 && IsUnderWater)
-                IsUnderWater = false;
 
+            if (!IsUnderWater && Position.Z < 98) //TODO: Need way to determine when player is under any body of water. 
+                IsUnderWater = true;
+            else if (IsUnderWater && Position.Z > 98)
+                IsUnderWater = false;
+            
             if (!moved)
                 return;
 
@@ -1504,17 +1512,6 @@ namespace AAEmu.Game.Models.Game.Char
                 return Load(connection, characterId);
         }
 
-        public uint MaxBreath
-        {
-            get
-            {
-                if (Race == Race.Elf)
-                    return 80000;
-                else
-                    return 60000;
-            }
-        }
-
         public uint Breath { get; set; }
         
         public bool IsDrowning
@@ -1618,8 +1615,6 @@ namespace AAEmu.Game.Models.Game.Char
                             character.Hp = character.MaxHp;
                         if (character.Mp > character.MaxMp)
                             character.Mp = character.MaxMp;
-                        if (character.Breath < character.MaxBreath)
-                            character.Breath = character.MaxBreath;
                         character.CheckExp();
                     }
                 }
@@ -1725,8 +1720,6 @@ namespace AAEmu.Game.Models.Game.Char
                             character.Hp = character.MaxHp;
                         if (character.Mp > character.MaxMp)
                             character.Mp = character.MaxMp;
-                        if (character.Breath < character.MaxBreath)
-                            character.Breath = character.MaxBreath;
                         character.CheckExp();
                     }
                 }
